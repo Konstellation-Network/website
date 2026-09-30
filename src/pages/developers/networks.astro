@@ -1,0 +1,80 @@
+---
+import Base from '../../layouts/Base.astro';
+import DevPage from '../../components/DevPage.astro';
+import KeyValueRows from '../../components/KeyValueRows.astro';
+import Arrow from '../../components/Arrow.astro';
+import { networks, localEndpoints, routes } from '../../data/site';
+
+const panels = [
+  ...networks.map((n) => ({
+    id: n.id,
+    label: n.label,
+    blurb: n.blurb,
+    opens: n.opens,
+    rows: [
+      { label: 'Chain ID', value: n.chainId },
+      { label: 'Network', value: n.name },
+      { label: 'Currency symbol', value: 'KASH' },
+      { label: 'JSON-RPC', value: n.endpoints.jsonRpc },
+      { label: 'WebSocket', value: n.endpoints.ws },
+      { label: 'Cosmos REST', value: n.endpoints.rest },
+      { label: 'gRPC', value: n.endpoints.grpc },
+      { label: 'CometBFT RPC', value: n.endpoints.comet },
+      { label: 'Explorer', value: n.endpoints.explorer },
+    ],
+  })),
+  {
+    id: 'local',
+    label: 'Local',
+    blurb: 'Default ports for a node running on your own machine.',
+    opens: undefined,
+    rows: [
+      { label: 'JSON-RPC', value: localEndpoints.jsonRpc },
+      { label: 'WebSocket', value: localEndpoints.ws },
+      { label: 'Cosmos REST', value: localEndpoints.rest },
+      { label: 'gRPC', value: localEndpoints.grpc },
+      { label: 'CometBFT RPC', value: localEndpoints.comet },
+    ],
+  },
+];
+---
+<Base title="Networks & RPC — Konstellation" description="Chain IDs and endpoints for each Konstellation network.">
+  <DevPage title="Networks & RPC" intro="Chain IDs and endpoints for each Konstellation network." span={8}>
+    <div data-tabs class="tabs">
+      <div role="tablist" aria-label="Networks" class="tablist">
+        {panels.map((p, i) => (
+          <button
+            type="button"
+            role="tab"
+            class="tab"
+            id={`tab-${p.id}`}
+            aria-controls={`panel-${p.id}`}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            tabindex={i === 0 ? undefined : -1}
+          >{p.label}</button>
+        ))}
+      </div>
+      {panels.map((p, i) => (
+        <div role="tabpanel" id={`panel-${p.id}`} aria-labelledby={`tab-${p.id}`} class="panel" hidden={i !== 0}>
+          <p class="blurb">{p.blurb}{p.opens && <> <span class="tbd">{p.opens}</span>.</>}</p>
+          <KeyValueRows rows={p.rows} />
+        </div>
+      ))}
+    </div>
+    <div class="after">
+      <p class="note">Endpoints marked <span class="tbd">[TBD]</span> are published when each network opens. Devnet runs the same release as mainnet.</p>
+      <a href={routes.faucet} class="link">Next: get test KASH<Arrow /></a>
+    </div>
+  </DevPage>
+</Base>
+
+<style>
+  .tabs { display: flex; flex-direction: column; gap: 24px; }
+  .panel { display: flex; flex-direction: column; gap: 24px; }
+  .blurb { font-size: 17px; line-height: 26px; color: var(--fg); text-wrap: pretty; }
+  .after { margin-top: 40px; display: flex; flex-direction: column; gap: 12px; }
+  @media (min-width: 900px) {
+    .tabs { gap: 32px; }
+    .blurb { font-size: 21px; line-height: 32px; }
+  }
+</style>
