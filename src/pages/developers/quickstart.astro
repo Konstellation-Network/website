@@ -1,0 +1,168 @@
+---
+import Base from '../../layouts/Base.astro';
+import DevPage from '../../components/DevPage.astro';
+import KeyValueRows from '../../components/KeyValueRows.astro';
+import CodePanel from '../../components/CodePanel.astro';
+import Arrow from '../../components/Arrow.astro';
+import { devnet, routes } from '../../data/site';
+
+const rpc = devnet.rpc ?? '[TBD]';
+
+const walletRows = [
+  { label: 'Network name', value: devnet.displayName },
+  { label: 'Chain ID', value: devnet.chainId },
+  { label: 'Currency symbol', value: devnet.symbol },
+  { label: 'RPC URL', value: devnet.rpc },
+  { label: 'Block explorer', value: devnet.explorer },
+];
+
+// Parameters for wallet_addEthereumChain; only usable once the RPC is published.
+const addChain = devnet.rpc
+  ? JSON.stringify({
+      chainId: '0x' + devnet.chainId.toString(16),
+      chainName: devnet.displayName,
+      nativeCurrency: { name: devnet.symbol, symbol: devnet.symbol, decimals: 18 },
+      rpcUrls: [devnet.rpc],
+      ...(devnet.explorer ? { blockExplorerUrls: [devnet.explorer] } : {}),
+    })
+  : null;
+
+const foundry = `<span class="cm"># In an empty working directory: create a Foundry project</span>
+forge init hello-konstellation
+cd hello-konstellation
+
+<span class="cm"># Deploy the example contract to ${devnet.name}</span>
+forge create src/Counter.sol:Counter \\
+  --rpc-url <span class="str">${rpc}</span> \\
+  --private-key $PRIVATE_KEY \\
+  --broadcast`;
+
+const scrConfig = `<span class="cm">// scriipture.config.mjs</span>
+<span class="kw">import</span> { defineConfig } <span class="kw">from</span> <span class="str">"scriipture"</span>;
+
+<span class="kw">export</span> <span class="kw">default</span> defineConfig({
+  networks: {
+    <span class="str">"konstellation-devnet"</span>: {
+      rpcUrl: <span class="str">"${devnet.rpc ?? 'https://&lt;devnet-rpc&gt; [TBD]'}"</span>,
+      chainId: ${devnet.chainId},
+      nativeCurrency: { name: <span class="str">"${devnet.symbol}"</span>, symbol: <span class="str">"${devnet.symbol}"</span>, decimals: 18 },
+    },
+  },
+});`;
+
+const scrDeploy = `<span class="cm"># From your Scriipture project directory</span>
+npx scriipture deploy Counter -n konstellation-devnet`;
+
+const steps = [
+  { id: 'st1', short: 'Add devnet-1' },
+  { id: 'st2', short: 'Get test KASH' },
+  { id: 'st3', short: 'Deploy a contract' },
+  { id: 'st4', short: 'Find your contract' },
+];
+---
+<Base title="Quickstart — Konstellation" description="Connect to devnet-1, get test KASH and deploy a contract with Foundry or Scriipture.">
+  <DevPage title="Quickstart" intro="Connect to devnet-1, get test KASH and deploy a contract with Foundry or Scriipture.">
+    <div class="steps">
+      <section aria-labelledby="st1" class="step">
+        <div class="step-head"><span class="num" aria-hidden="true">1</span><h2 id="st1">Add devnet-1 to your wallet</h2></div>
+        <KeyValueRows rows={walletRows} />
+        <div class="btn-row">
+          <button
+            type="button"
+            class="btn btn--primary"
+            data-add-chain={addChain}
+            disabled={!addChain}
+            title={addChain ? undefined : 'Available once the devnet RPC URL is published'}
+          >Add to wallet</button>
+        </div>
+        <p class="note" data-wallet-msg aria-live="polite">Or add the network manually in MetaMask or any EVM wallet with the settings above.</p>
+      </section>
+
+      <section aria-labelledby="st2" class="step">
+        <div class="step-head"><span class="num" aria-hidden="true">2</span><h2 id="st2">Get test KASH</h2></div>
+        <p class="body-text">Request free test KASH for your address. Test KASH has no monetary value.</p>
+        <a href={routes.faucet} class="link">Open the faucet<Arrow /></a>
+      </section>
+
+      <section aria-labelledby="st3" class="step">
+        <div class="step-head"><span class="num" aria-hidden="true">3</span><h2 id="st3">Deploy a contract</h2></div>
+        <div data-tabs class="stack gap-20">
+          <div role="tablist" aria-label="Deploy with" class="tablist">
+            <button type="button" role="tab" class="tab" id="dtab-foundry" aria-controls="dpanel-foundry" aria-selected="true">Foundry</button>
+            <button type="button" role="tab" class="tab" id="dtab-scriipture" aria-controls="dpanel-scriipture" aria-selected="false" tabindex="-1">Scriipture</button>
+          </div>
+          <div role="tabpanel" id="dpanel-foundry" aria-labelledby="dtab-foundry" class="stack gap-20">
+            <p class="body-text">Write Solidity and deploy with Foundry. It needs no Konstellation-specific plugins: set the RPC URL and your funded key, then deploy.</p>
+            <CodePanel id="code-foundry" filename="terminal" html={foundry} />
+          </div>
+          <div role="tabpanel" id="dpanel-scriipture" aria-labelledby="dtab-scriipture" class="stack gap-20" hidden>
+            <p class="body-text">Write the contract in TypeScript. Scriipture compiles it to Solidity, runs nine security checks, and opens your browser wallet to sign. Konstellation is not a built-in target yet, so add devnet to your config first.</p>
+            <CodePanel id="code-scr-config" filename="scriipture.config.mjs" html={scrConfig} />
+            <CodePanel id="code-scr-deploy" filename="terminal" html={scrDeploy} />
+            <p class="note">The npm package is not published yet. <span class="tbd">[TBD]</span></p>
+            <a href={routes.scriipture} class="link">About Scriipture<Arrow /></a>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="st4" class="step">
+        <div class="step-head"><span class="num" aria-hidden="true">4</span><h2 id="st4">Find your contract</h2></div>
+        <p class="body-text">Copy the deployed address from the output and open it in the explorer <span class="tbd">[TBD]</span>.</p>
+        <a href={routes.networks} class="link">Next: networks and RPC<Arrow /></a>
+      </section>
+    </div>
+
+    <nav slot="rail" aria-label="On this page" class="toc">
+      <div class="eyebrow">On this page</div>
+      {steps.map((s) => <a href={`#${s.id}`} class="text-link">{s.short}</a>)}
+    </nav>
+  </DevPage>
+</Base>
+
+<script>
+  // "Add to wallet": EIP-3085 wallet_addEthereumChain with the devnet settings.
+  const btn = document.querySelector<HTMLButtonElement>('[data-add-chain]');
+  const msg = document.querySelector<HTMLElement>('[data-wallet-msg]');
+  type Eth = { request: (a: { method: string; params: unknown[] }) => Promise<unknown> };
+  btn?.addEventListener('click', async () => {
+    const eth = (window as unknown as { ethereum?: Eth }).ethereum;
+    if (!eth) {
+      if (msg) msg.textContent = 'No browser wallet found. Add the network manually with the settings above.';
+      return;
+    }
+    try {
+      await eth.request({ method: 'wallet_addEthereumChain', params: [JSON.parse(btn.dataset.addChain!)] });
+      if (msg) msg.textContent = 'devnet-1 added to your wallet.';
+    } catch {
+      if (msg) msg.textContent = 'The wallet did not add the network. You can add it manually with the settings above.';
+    }
+  });
+</script>
+
+<style>
+  .steps { display: flex; flex-direction: column; gap: 40px; }
+  .step { display: flex; flex-direction: column; gap: 20px; border-top: 1px solid var(--fg); padding-top: 24px; scroll-margin-top: 24px; }
+  .step-head { display: flex; align-items: center; gap: 16px; }
+  .num {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--fg);
+    border-radius: 50%;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .step h2 { font-size: 22px; line-height: 1.2; font-weight: 500; letter-spacing: -0.015em; }
+  .gap-20 { gap: 20px; }
+  .toc { display: flex; flex-direction: column; gap: 12px; padding-top: 8px; }
+  .toc a { font-size: 14px; line-height: 20px; color: var(--muted); }
+  .toc a:hover { color: var(--fg); }
+
+  @media (min-width: 900px) {
+    .steps { gap: 56px; }
+    .step h2 { font-size: 28px; }
+  }
+</style>
