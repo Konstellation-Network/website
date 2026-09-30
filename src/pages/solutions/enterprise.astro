@@ -1,0 +1,52 @@
+---
+import SolutionPage from '../../components/solutions/SolutionPage.astro';
+import FlowDiagram from '../../components/solutions/FlowDiagram.astro';
+
+const features = [
+  {
+    title: 'Passkey wallets',
+    body: 'WebAuthn passkeys are verified on-chain through the P-256 precompile. Users sign in with the device they already use.',
+  },
+  {
+    title: 'Smart accounts',
+    body: 'ERC-4337 smart accounts through the canonical EntryPoint, and EIP-7702 for existing addresses.',
+  },
+  {
+    title: 'Sponsored gas',
+    body: 'Paymasters let your application pay transaction fees, so users never need to hold KASH.',
+  },
+  {
+    title: 'Standard Ethereum tooling',
+    body: 'Solidity, viem, wagmi, Foundry and Hardhat work unchanged, so existing teams start with what they know.',
+  },
+];
+---
+<SolutionPage
+  pageTitle="Enterprise — Konstellation"
+  description="Passkey sign-in, smart-contract accounts and sponsored transactions come as standard, so your users never manage a seed phrase."
+  eyebrow="Solutions · Enterprise"
+  title="Blockchain applications without seed phrases."
+  intro="Passkey sign-in, smart-contract accounts and sponsored transactions come as standard, so your users never manage a seed phrase."
+  problem="Customers expect to sign in with a device they already use. Seed phrases and gas tokens add steps that most enterprise products cannot ask of them."
+  approach="The chain verifies passkey signatures, supports smart accounts, and lets your application pay fees on its users’ behalf. Your team keeps its Ethereum tools."
+  flowEyebrow="Transaction flow"
+  flowTitle="From sign-in to settlement, with no gas token."
+  featuresTitle="Chain features for enterprise teams."
+  features={features}
+  ctaTitle="Plan an enterprise deployment."
+  ctaBody="Tell us about your users, your product and the transactions you need to support."
+>
+  <FlowDiagram
+    slot="flow"
+    label="A customer signs with a passkey. Their smart account (ERC-4337 or EIP-7702) submits the transaction, a paymaster sponsored by your application pays the fee, so no KASH is needed, and the transaction is final in about two seconds."
+    nodes={[
+      [{ text: 'Customer', style: 'strong' }, { text: 'passkey (WebAuthn)' }],
+      [{ text: 'Smart account', style: 'strong' }, { text: 'ERC-4337 or EIP-7702' }],
+      [{ text: 'Paymaster', style: 'plain' }, { text: 'pays the fee' }],
+      [{ text: 'Transaction', style: 'strong' }, { text: 'no KASH needed' }],
+      [{ text: 'Settled', style: 'strong' }, { text: 'final in ~2 s' }],
+    ]}
+    arrows={{ a12: 'signs', a34: 'submits' }}
+    note={{ text: ['sponsored by', 'your application'] }}
+  />
+</SolutionPage>

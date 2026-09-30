@@ -1,0 +1,167 @@
+---
+// Shared layout of the Solutions pages (Tokenization, Enterprise): hero,
+// problem/approach, flow diagram (slot "flow"), four chain features, and the
+// inverted next-step section.
+import Base from '../../layouts/Base.astro';
+import Mark from '../Mark.astro';
+import { routes } from '../../data/site';
+
+interface Props {
+  pageTitle: string;
+  description: string;
+  eyebrow: string;
+  title: string;
+  intro: string;
+  problem: string;
+  approach: string;
+  flowEyebrow: string;
+  flowTitle: string;
+  featuresTitle: string;
+  /** body is HTML; use <span class="tbd">…</span> for inline code. */
+  features: { title: string; body: string }[];
+  ctaTitle: string;
+  ctaBody: string;
+}
+const p = Astro.props;
+---
+<Base title={p.pageTitle} description={p.description}>
+  <section class="hero" aria-label="Introduction">
+    <div class="container">
+      <div class="hero-text">
+        <div class="eyebrow">{p.eyebrow}</div>
+        <h1>{p.title}</h1>
+        <p class="lead hero-lead">{p.intro}</p>
+        <div class="btn-row">
+          <a href={routes.contact} class="btn btn--primary">Talk to us</a>
+          <a href={routes.developers} class="btn btn--outline">Read the docs</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--alt" aria-label="Problem and approach">
+    <div class="container pa">
+      <div class="pa-col pa-problem">
+        <div class="eyebrow">The problem</div>
+        <p class="pa-text">{p.problem}</p>
+      </div>
+      <div class="pa-col pa-approach">
+        <div class="eyebrow">How Konstellation addresses it</div>
+        <p class="pa-text">{p.approach}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="flow-h">
+    <div class="container flow-wrap">
+      <div class="flow-head">
+        <div class="eyebrow">{p.flowEyebrow}</div>
+        <h2 id="flow-h" class="h2" data-reveal>{p.flowTitle}</h2>
+      </div>
+      <slot name="flow" />
+    </div>
+  </section>
+
+  <section class="section features-sec" aria-labelledby="feat-h">
+    <div class="container features-wrap">
+      <h2 id="feat-h" class="h2" data-reveal>{p.featuresTitle}</h2>
+      <div class="features">
+        {p.features.map((f, i) => (
+          <div class="feature">
+            <div class="eyebrow">{String(i + 1).padStart(2, '0')}</div>
+            <h3>{f.title}</h3>
+            <p set:html={f.body} />
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="cta inverted" aria-labelledby="cta-h">
+    <div class="container cta-grid">
+      <div class="cta-text">
+        <h2 id="cta-h" class="h2" data-reveal>{p.ctaTitle}</h2>
+        <p class="cta-body">{p.ctaBody}</p>
+        <div class="btn-row">
+          <a href={routes.contact} class="btn btn--primary">Talk to us</a>
+          <a href={routes.developers} class="btn btn--outline">Read the docs</a>
+        </div>
+      </div>
+      <div class="cta-mark"><Mark size={200} class="cta-mark-svg" /></div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* ----- Hero ----- */
+  .hero { padding-block: 56px; }
+  .hero-text { display: flex; flex-direction: column; gap: 24px; }
+  h1 { font-size: 42px; line-height: 1.06; letter-spacing: -0.03em; font-weight: 400; text-wrap: balance; }
+  .hero-lead { max-width: 680px; }
+
+  /* ----- Problem / approach ----- */
+  .pa { display: flex; flex-direction: column; gap: 40px; }
+  .pa-col { display: flex; flex-direction: column; gap: 16px; }
+  .pa-text { font-size: 20px; line-height: 29px; letter-spacing: -0.01em; text-wrap: pretty; }
+
+  /* ----- Flow ----- */
+  .flow-wrap { display: flex; flex-direction: column; gap: 32px; }
+  .flow-head { display: flex; flex-direction: column; gap: 20px; }
+
+  /* ----- Features ----- */
+  .features-sec { border-top: 1px solid var(--line); }
+  .features-wrap { display: flex; flex-direction: column; gap: 40px; }
+  .features { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .feature { border-top: 1px solid var(--fg); padding: 20px 0 28px; display: flex; flex-direction: column; gap: 10px; }
+  .feature h3 { font-size: 22px; line-height: 1.25; letter-spacing: -0.01em; font-weight: 500; text-wrap: balance; }
+  .feature p { font-size: 16px; line-height: 25px; color: var(--muted); max-width: 520px; text-wrap: pretty; }
+
+  /* ----- Next step (inverted) ----- */
+  .cta { padding-block: 80px; }
+  .cta-text { display: flex; flex-direction: column; gap: 32px; }
+  /* Muted text on the inverted ground: the other theme's grey. */
+  .cta-body {
+    font-size: 17px;
+    line-height: 26px;
+    max-width: 560px;
+    color: color-mix(in srgb, var(--bg) 64%, var(--fg));
+    text-wrap: pretty;
+  }
+  .cta-mark { display: flex; justify-content: flex-end; margin-top: 48px; }
+  .cta-mark :global(.cta-mark-svg) { width: 112px; height: 112px; }
+
+  @media (min-width: 900px) {
+    .hero { padding-block: 112px; }
+    .hero-text { max-width: calc((100% - 11 * 24px) / 12 * 9 + 8 * 24px); gap: 28px; }
+    h1 { font-size: clamp(56px, 5.56vw, 80px); line-height: 1.02; letter-spacing: -0.035em; }
+
+    .pa {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 24px;
+    }
+    .pa-problem { grid-column: 1 / span 5; }
+    .pa-approach { grid-column: 7 / span 6; }
+    .pa-text { font-size: clamp(22px, 1.81vw, 26px); line-height: 1.385; }
+
+    .flow-wrap { gap: 64px; }
+    .flow-head { max-width: calc((100% - 11 * 24px) / 12 * 7 + 6 * 24px); }
+
+    .features-wrap { gap: 64px; }
+    .features { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; }
+    .feature { padding: 28px 0 48px; gap: 14px; }
+    .feature h3 { font-size: 28px; line-height: 1.2; letter-spacing: -0.015em; }
+    .feature p { font-size: 17px; line-height: 27px; }
+
+    .cta { padding-block: 136px; }
+    .cta-grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 24px;
+    }
+    .cta-text { grid-column: 1 / span 8; gap: 36px; }
+    .cta-body { font-size: 21px; line-height: 32px; }
+    .cta-mark { grid-column: 10 / span 3; margin-top: 0; align-items: center; }
+    .cta-mark :global(.cta-mark-svg) { width: 100%; max-width: 200px; height: auto; aspect-ratio: 1; }
+  }
+</style>

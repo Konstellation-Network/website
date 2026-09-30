@@ -1,0 +1,170 @@
+---
+// Five-step flow diagram used by the Solutions pages: box → box → circle →
+// box → settled circle. Horizontal (1248×224) on wide screens, vertical
+// (350×672) on narrow ones, as in the design. SVG, so it scales and follows
+// the theme tokens. Only the text differs between pages.
+
+type Line = { text: string; style?: 'strong' | 'plain' | 'muted' | 'mono' | 'mono-muted' };
+type Label = { text: string[] };
+interface Props {
+  /** Accessible description of the whole flow. */
+  label: string;
+  /** Exactly five nodes, in order. The last is the filled "settled" circle. */
+  nodes: [Line[], Line[], Line[], Line[], Line[]];
+  /** Arrow labels: between node 1→2 (signs), 2→3 (calls), 3→4 (verified / submits). */
+  arrows: { a12?: string; a23?: string; a34?: string };
+  /** Note under the middle circle (desktop) / beside it (mobile). */
+  note?: Label;
+  /** Shorter note for the narrow drawing; omitted there if not given. */
+  noteNarrow?: Label;
+}
+const { label, nodes, arrows, note, noteNarrow } = Astro.props;
+
+const headRight = (x: number, y: number) => `${x - 4.8},${y - 3} ${x + 1.2},${y} ${x - 4.8},${y + 3}`;
+const headDown = (x: number, y: number) => `${x - 3},${y - 4.8} ${x},${y + 1.2} ${x + 3},${y - 4.8}`;
+
+// Wide geometry (from the design, in px).
+const wide = {
+  boxes: [
+    { x: 0, w: 208 },
+    { x: 272, w: 232 },
+    { x: 832, w: 208 },
+  ],
+  circle: { cx: 656, r: 72 },
+  settled: { cx: 1176, r: 72 },
+  cy: 96,
+  arrows: [
+    [208, 270],
+    [504, 582],
+    [728, 830],
+    [1040, 1102],
+  ],
+};
+// Narrow geometry.
+const narrow = {
+  cx: 175,
+  boxes: [0, 120, 432], // tops; 240×72 at x=55
+  circle: { cy: 304, r: 64 },
+  settled: { cy: 612, r: 60 },
+  arrows: [
+    [72, 118],
+    [192, 238],
+    [368, 430],
+    [504, 550],
+  ],
+};
+
+const cls = (l: Line) => ({ strong: 'strong', plain: '', muted: 'm', mono: 'mono', 'mono-muted': 'mono m' })[l.style ?? 'muted'] ?? '';
+// y of line i of n, centred on cy with line height lh
+const ly = (cy: number, i: number, n: number, lh: number) => cy + (i - (n - 1) / 2) * lh;
+const [n1, n2, n3, n4, n5] = nodes;
+const boxNodes = [n1, n2, n4];
+---
+<figure class="flow" data-reveal>
+  <svg class="diagram wide" viewBox="0 0 1248 224" role="img" aria-label={label}>
+    {wide.arrows.map(([x1, x2]) => (
+      <g class="arrow">
+        <line x1={x1} y1={wide.cy} x2={x2} y2={wide.cy} />
+        <polygon points={headRight(x2, wide.cy)} />
+      </g>
+    ))}
+    {wide.boxes.map((b, bi) => (
+      <g>
+        <rect class="box" x={b.x + 0.5} y="48.5" width={b.w - 1} height="95" rx="4" />
+        {boxNodes[bi].map((l, i, all) => (
+          <text x={b.x + b.w / 2} y={ly(wide.cy, i, all.length, 21)} class={`c ${cls(l)}`}>{l.text}</text>
+        ))}
+      </g>
+    ))}
+    <circle class="box" cx={wide.circle.cx} cy={wide.cy} r={wide.circle.r - 0.5} />
+    {n3.map((l, i, all) => (
+      <text x={wide.circle.cx} y={ly(wide.cy, i, all.length, 19)} class={`c s14 ${cls(l)}`}>{l.text}</text>
+    ))}
+    <circle class="solid" cx={wide.settled.cx} cy={wide.cy} r={wide.settled.r} />
+    {n5.map((l, i, all) => (
+      <text x={wide.settled.cx} y={ly(wide.cy, i, all.length, 19)} class={`c inv ${l.style === 'strong' ? 'strong' : ''}`}>{l.text}</text>
+    ))}
+
+    {arrows.a12 && <text x="239" y="76" class="c lbl">{arrows.a12}</text>}
+    {arrows.a23 && <text x="544" y="76" class="c lbl">{arrows.a23}</text>}
+    {arrows.a34 && <text x="779" y="76" class="c lbl">{arrows.a34}</text>}
+    {note && note.text.map((t, i) => <text x="656" y={188 + i * 16} class="c lbl">{t}</text>)}
+  </svg>
+
+  <svg class="diagram narrow" viewBox="0 0 350 672" role="img" aria-label={label}>
+    {narrow.arrows.map(([y1, y2]) => (
+      <g class="arrow">
+        <line x1={narrow.cx} y1={y1} x2={narrow.cx} y2={y2} />
+        <polygon points={headDown(narrow.cx, y2)} />
+      </g>
+    ))}
+    {narrow.boxes.map((top, bi) => (
+      <g>
+        <rect class="box" x="55.5" y={top + 0.5} width="239" height="71" rx="4" />
+        {boxNodes[bi].map((l, i, all) => (
+          <text x={narrow.cx} y={ly(top + 36, i, all.length, 21)} class={`c s14 ${cls(l)}`}>{l.text}</text>
+        ))}
+      </g>
+    ))}
+    <circle class="box" cx={narrow.cx} cy={narrow.circle.cy} r={narrow.circle.r - 0.5} />
+    {n3.map((l, i, all) => (
+      <text x={narrow.cx} y={ly(narrow.circle.cy, i, all.length, 19)} class={`c s14 n-mono ${cls(l)}`}>{l.text}</text>
+    ))}
+    <circle class="solid" cx={narrow.cx} cy={narrow.settled.cy} r={narrow.settled.r} />
+    {n5.map((l, i, all) => (
+      <text x={narrow.cx} y={ly(narrow.settled.cy, i, all.length, 19)} class={`c s14 inv ${l.style === 'strong' ? 'strong' : ''}`}>{l.text}</text>
+    ))}
+
+    {arrows.a12 && <text x="187" y="95" class="lbl">{arrows.a12}</text>}
+    {arrows.a23 && <text x="187" y="215" class="lbl">{arrows.a23}</text>}
+    {arrows.a34 && <text x="187" y="399" class="lbl">{arrows.a34}</text>}
+    {noteNarrow && noteNarrow.text.map((t, i) => <text x="251" y={298 + i * 16} class="lbl">{t}</text>)}
+  </svg>
+  <div class="notch" aria-hidden="true"></div>
+</figure>
+
+<style>
+  .flow {
+    position: relative;
+    overflow: hidden;
+    padding: 32px 0;
+    background: var(--alt);
+    border-radius: var(--radius);
+  }
+  .diagram { width: 100%; height: auto; font-family: var(--sans); font-size: 15px; }
+  .narrow { max-width: 350px; margin: 0 auto; }
+  .wide, .notch { display: none; }
+
+  text { dominant-baseline: central; fill: var(--fg); }
+  .c { text-anchor: middle; }
+  .box { fill: var(--bg); stroke: var(--fg); stroke-width: 1; }
+  .solid { fill: var(--fg); }
+  .arrow line { stroke: var(--fg); stroke-width: 1.5; stroke-linecap: round; }
+  .arrow polygon { fill: var(--fg); }
+
+  .strong { font-weight: 500; }
+  .m { fill: var(--muted); }
+  .mono { font-family: var(--mono); font-size: 13.2px; }
+  .s14 { font-size: 14px; }
+  .s14.mono { font-size: 12.3px; }
+  .wide .s14.mono { font-size: 13px; }
+  .n-mono.mono { font-size: 12px; }
+  .inv { fill: var(--bg); }
+  .lbl { font-family: var(--mono); font-size: 12px; fill: var(--muted); }
+
+  .notch {
+    position: absolute;
+    top: -44px;
+    right: -44px;
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: var(--bg);
+  }
+
+  @media (min-width: 1200px) {
+    .flow { padding: 64px 16px 56px; }
+    .wide, .notch { display: block; }
+    .narrow { display: none; }
+  }
+</style>

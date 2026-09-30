@@ -1,0 +1,53 @@
+---
+import SolutionPage from '../../components/solutions/SolutionPage.astro';
+import FlowDiagram from '../../components/solutions/FlowDiagram.astro';
+
+const features = [
+  {
+    title: 'Verification list checks',
+    body: 'Token contracts call <span class="tbd">isVerified</span> and <span class="tbd">isFrozen</span> through the compliance precompile at <span class="tbd">0x…0900</span> before a transfer.',
+  },
+  {
+    title: 'Works alongside ERC-3643',
+    body: 'Keep identity and transfer rules in token-level standards such as ERC-3643. The protocol lists sit underneath them.',
+  },
+  {
+    title: 'Canonical Safe multisig factory',
+    body: 'Hold issuer custody in a Safe multisig, deployed from the canonical factory at its standard address.',
+  },
+  {
+    title: 'Deterministic finality',
+    body: 'A settled transfer is final in about two seconds. It cannot be reversed by a reorganisation.',
+  },
+];
+---
+<SolutionPage
+  pageTitle="Tokenization and RWA — Konstellation"
+  description="Funds, bonds, credit and other real-world assets, issued as tokens on a Layer 1 designed for regulated assets."
+  eyebrow="Solutions · Tokenization and RWA"
+  title="Issue assets with transfer rules the chain can enforce."
+  intro="Funds, bonds, credit and other real-world assets, issued as tokens on a Layer 1 designed for regulated assets."
+  problem="Tokenized securities carry transfer restrictions. On general-purpose chains those rules live only in each token contract, and a confirmed transfer can still be reorganised away."
+  approach="The chain keeps a verification list your contracts can require and a freeze list it enforces itself. Settlement is final in about two seconds."
+  flowEyebrow="Transfer flow"
+  flowTitle="From issuer to investor, checked on the way."
+  featuresTitle="Chain features for issuers."
+  features={features}
+  ctaTitle="Discuss an issuance on Konstellation."
+  ctaBody="Tell us about the asset, the jurisdiction and the investors you need to reach."
+>
+  <FlowDiagram
+    slot="flow"
+    label="An issuer's Safe multisig transfers through the token contract, which calls the compliance precompile to check isVerified and isFrozen for the recipient. A verified investor receives the tokens, and the transfer is final in about two seconds."
+    nodes={[
+      [{ text: 'Issuer', style: 'strong' }, { text: 'Safe multisig' }],
+      [{ text: 'Token contract', style: 'strong' }, { text: 'e.g. ERC-3643' }],
+      [{ text: 'isVerified(to)', style: 'mono' }, { text: 'isFrozen(to)', style: 'mono' }],
+      [{ text: 'Investor', style: 'strong' }, { text: '0x5c2…e81d', style: 'mono-muted' }],
+      [{ text: 'Settled', style: 'strong' }, { text: 'final in ~2 s' }],
+    ]}
+    arrows={{ a23: 'calls', a34: 'verified' }}
+    note={{ text: ['compliance precompile', '0x…0900'] }}
+    noteNarrow={{ text: ['precompile', '0x…0900'] }}
+  />
+</SolutionPage>

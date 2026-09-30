@@ -5,6 +5,9 @@ import { routes, developerMenu } from '../data/site';
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 const current = (href: string) => (href !== '#' && (path === href || path.startsWith(href + '/')) ? 'page' : undefined);
 const inDevelopers = path.startsWith(routes.developers);
+// Solutions covers every /solutions/* page, not just the one it links to.
+const navCurrent = (l: { label: string; href: string }) =>
+  l.label === 'Solutions' ? (path.startsWith('/solutions/') ? 'page' : undefined) : current(l.href);
 
 const primary = [
   { label: 'Solutions', href: routes.tokenization },
@@ -17,7 +20,7 @@ const primary = [
     <Logo />
 
     <nav class="desk-nav" aria-label="Main">
-      {primary.map((l) => <a href={l.href} class="nav-link" aria-current={current(l.href)}>{l.label}</a>)}
+      {primary.map((l) => <a href={l.href} class="nav-link" aria-current={navCurrent(l)}>{l.label}</a>)}
       <div class="dd" data-dropdown>
         <button
           type="button"
@@ -97,7 +100,7 @@ const primary = [
   <nav id="m-menu" class="drawer" aria-label="Main" hidden>
     <div class="container drawer-inner">
       <ul class="m-list">
-        {primary.map((l) => <li><a href={l.href} class="m-link" aria-current={current(l.href)}>{l.label}</a></li>)}
+        {primary.map((l) => <li><a href={l.href} class="m-link" aria-current={navCurrent(l)}>{l.label}</a></li>)}
         <li>
           <button type="button" class="m-link m-dev-trigger" aria-expanded="false" aria-controls="m-dev">
             Developers
