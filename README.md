@@ -40,3 +40,5 @@ Breakpoints: 900px (section layouts), 1200px (desktop header, wide diagram).
 
 Endpoints, chain IDs and faucet amount/limit live in `src/data/site.ts`;
 anything `null` renders as `[TBD]`.
+
+Open work is tracked in [TODO.md](TODO.md).
