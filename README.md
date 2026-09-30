@@ -34,6 +34,8 @@ Breakpoints: 900px (section layouts), 1200px (desktop header, wide diagram).
 | Variable | |
 |---|---|
 | `PUBLIC_FAUCET_URL` | origin of the `faucet` service, e.g. `https://faucet.devnet-1.…`. Unset: the Faucet form says the faucet is not open yet. The faucet must list this site's origin in its `ALLOWED_ORIGINS`, or it refuses the POST (403 `forbidden_origin`). |
+| `PUBLIC_CONTACT_URL` | endpoint the Contact form POSTs JSON to (`name, email, organisation, role, useCase, message`). Unset: the form says enquiries are not open yet. |
+| `PUBLIC_GRANTS_URL` | where the Ecosystem page's Apply buttons go. Unset: Apply is disabled. |
 | `PUBLIC_EXPLORER_TX_URL` | explorer transaction link, `{hash}` replaced, e.g. `https://explorer…/tx/{hash}`. |
 
 Endpoints, chain IDs and faucet amount/limit live in `src/data/site.ts`;
