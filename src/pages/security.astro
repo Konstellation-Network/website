@@ -1,0 +1,226 @@
+---
+import Base from '../layouts/Base.astro';
+import Mark from '../components/Mark.astro';
+import CodePanel from '../components/CodePanel.astro';
+
+// Facts on this page follow ENGINEERING §2.1, §2.6, §4.2, §11 (D8, D9, D14,
+// D15), §12, §13, §15 and the konstellation repo's RELEASING.md. Keep them in step.
+const REPORT_URL = 'https://github.com/Konstellation-Network/konstellation/security/advisories/new';
+const POLICY_URL = 'https://github.com/Konstellation-Network/.github/blob/main/SECURITY.md';
+
+const controls = [
+  {
+    title: 'Circuit breaker',
+    body: 'Pauses specific transaction types without halting the chain. Blocks keep being produced.',
+  },
+  {
+    title: 'Cross-chain rate limits',
+    body: 'Rate limits on cross-chain flows cap how much value can move per channel, per window.',
+  },
+  {
+    title: 'Bridge caps in contracts',
+    body: 'When a bridge opens, its caps are enforced in contract code, not by off-chain policy. There is no bridge at launch.',
+  },
+  {
+    title: 'Rehearsed halt drill',
+    body: 'Halt-and-recover procedures are rehearsed on testnet before mainnet, so operators have run them before they are needed.',
+  },
+];
+
+const verify = `<span class="cm"># Download a release and check it against its published checksums</span>
+gh release download <span class="str">[TBD]</span> -R Konstellation-Network/konstellation
+sha256sum -c SHA256SUMS
+
+<span class="cm"># Confirm the binary was built by the release workflow</span>
+gh attestation verify konstellationd-<span class="str">[TBD]</span>-linux-amd64 \\
+  --repo Konstellation-Network/konstellation \\
+  --signer-workflow Konstellation-Network/konstellation/.github/workflows/release.yml`;
+---
+<Base
+  title="Security — Konstellation"
+  description="How Konstellation ships patches, limits exposure, launches in stages and invites outside scrutiny."
+>
+  <section class="hero" aria-label="Introduction">
+    <div class="container hero-grid">
+      <div class="hero-text">
+        <div class="eyebrow">Security</div>
+        <h1>Security engineering for real value from the first block.</h1>
+        <p class="lead hero-lead">How Konstellation ships patches, limits exposure, launches in stages and invites outside scrutiny.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--alt" aria-labelledby="up-h">
+    <div class="container split">
+      <div class="col-a stack-24">
+        <div class="eyebrow">01 · Upstream</div>
+        <h2 id="up-h" class="h2" data-reveal>We never fork the core software.</h2>
+        <p class="lead">Konstellation runs CometBFT, the Cosmos SDK, IBC-Go and the Cosmos EVM module as upstream dependencies, without forks. When upstream ships a security patch, there is no private fork to reconcile first.</p>
+      </div>
+      <div class="col-b stat">
+        <div class="stat-num">24 h</div>
+        <p class="body">Target from an upstream security patch to a tested Konstellation release, ready to ship.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="ctl-h">
+    <div class="container stack-64">
+      <div class="stack-20">
+        <div class="eyebrow">02 · Controls</div>
+        <h2 id="ctl-h" class="h2" data-reveal>Four safety controls.</h2>
+      </div>
+      <div class="controls">
+        {controls.map((c, i) => (
+          <div class="control">
+            <div class="eyebrow">{String(i + 1).padStart(2, '0')}</div>
+            <h3 class="h3">{c.title}</h3>
+            <p class="body">{c.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section launch" aria-labelledby="launch-h">
+    <div class="container split">
+      <div class="col-a5 stack-24">
+        <div class="eyebrow">03 · Launch</div>
+        <h2 id="launch-h" class="h2" data-reveal>A staged launch.</h2>
+        <p class="lead">Mainnet opens with limits in place. They are lifted as the network proves itself.</p>
+      </div>
+      <div class="col-b6 stages">
+        <div class="stage">
+          <div class="glyph"><span class="half" aria-hidden="true"></span></div>
+          <h3 class="h3">A soak period first</h3>
+          <p class="body">Mainnet runs for at least a month before limits are lifted, and they are lifted only after the audit and a clean run.</p>
+        </div>
+        <div class="stage">
+          <div class="glyph"><span class="ring" aria-hidden="true"></span></div>
+          <h3 class="h3">No bridge on day one</h3>
+          <p class="body">Cross-chain connectivity opens later. By policy, no IBC channel carries value until governance has set a rate limit for it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--alt" aria-labelledby="builds-h">
+    <div class="container split">
+      <div class="col-a5 stack-24">
+        <div class="eyebrow">04 · Builds</div>
+        <h2 id="builds-h" class="h2" data-reveal>Reproducible release builds.</h2>
+        <p class="lead">Every release is built twice, on separate machines, and published only if both binaries match. Checksums and build provenance are published with every release, so operators can confirm what they run.</p>
+      </div>
+      <div class="col-b6 code-col">
+        <CodePanel id="code-verify" filename="terminal" html={verify} />
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="review-h">
+    <div class="container split">
+      <div class="col-a5 stack-24">
+        <div class="eyebrow">05 · Review</div>
+        <h2 id="review-h" class="h2" data-reveal>Outside scrutiny.</h2>
+      </div>
+      <dl class="col-b6 review">
+        <div><dt>Audit partner</dt><dd>Informal Systems</dd></div>
+        <div><dt>Audit report</dt><dd>Published when complete. <span class="tbd">[TBD]</span></dd></div>
+        <div><dt>Bug bounty</dt><dd>Live before mainnet. Scope and rewards <span class="tbd">[TBD]</span></dd></div>
+        <div><dt>Disclosure</dt><dd><a href={REPORT_URL} class="link inline" target="_blank" rel="noopener">Report a vulnerability privately<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 2h6v6M10 2 2 10" /></svg></a></dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="cta inverted" aria-labelledby="cta-h">
+    <div class="container cta-grid">
+      <div class="cta-text">
+        <h2 id="cta-h" class="h2" data-reveal>Report a vulnerability.</h2>
+        <p class="lead cta-lead">Send security reports privately through GitHub’s vulnerability reporting. Please do not open a public issue. Read the <a href={POLICY_URL} target="_blank" rel="noopener">security policy</a>.</p>
+        <div class="btn-row">
+          <a href={REPORT_URL} class="btn btn--primary" target="_blank" rel="noopener">Report a vulnerability</a>
+        </div>
+      </div>
+      <div class="cta-mark"><Mark size={200} class="cta-mark-svg" /></div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero { padding-block: 56px; }
+  .hero-text { display: flex; flex-direction: column; gap: 24px; }
+  h1 { font-size: 42px; line-height: 1.06; letter-spacing: -0.03em; font-weight: 400; text-wrap: balance; }
+  .hero-lead { max-width: 680px; }
+
+  .stack-20 { display: flex; flex-direction: column; gap: 20px; }
+  .stack-24 { display: flex; flex-direction: column; gap: 24px; }
+  .stack-64 { display: flex; flex-direction: column; gap: 40px; }
+  .split { display: flex; flex-direction: column; gap: 40px; }
+  .h3 { font-size: 22px; line-height: 1.25; letter-spacing: -0.01em; font-weight: 500; text-wrap: balance; }
+  .body { font-size: 16px; line-height: 25px; color: var(--muted); text-wrap: pretty; max-width: 520px; }
+
+  .stat { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--fg); padding-top: 20px; }
+  .stat-num { font-size: 96px; line-height: 0.9; letter-spacing: -0.05em; }
+
+  .controls { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .control { border-top: 1px solid var(--fg); padding: 24px 0 36px; display: flex; flex-direction: column; gap: 12px; }
+
+  .launch { border-top: 1px solid var(--line); }
+  .stages { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 32px; }
+  .stage { display: flex; flex-direction: column; gap: 16px; border-top: 1px solid var(--fg); padding-top: 24px; }
+  .glyph { height: 64px; display: flex; align-items: flex-end; }
+  .half { width: 64px; height: 32px; border-radius: 32px 32px 0 0; background: var(--fg); }
+  .ring { width: 64px; height: 64px; border-radius: 50%; border: 18px solid var(--fg); }
+
+  .code-col { min-width: 0; }
+  /* CodePanel's corner notch matches the page background; this section is --alt. */
+  .code-col :global(.notch) { background: var(--alt); }
+
+  .review { border-bottom: 1px solid var(--line); }
+  .review > div { border-top: 1px solid var(--line); padding: 16px 0; display: flex; flex-direction: column; gap: 4px; }
+  .review dt { font-size: 13px; color: var(--muted); }
+  .review dd { font-size: 18px; line-height: 26px; }
+  .link.inline { font-size: inherit; font-weight: 400; gap: 6px; }
+
+  .cta { padding-block: 80px; }
+  .cta-text { display: flex; flex-direction: column; gap: 32px; }
+  .cta-lead { color: color-mix(in srgb, var(--bg) 65%, var(--fg)); max-width: 560px; }
+  .cta-lead a { color: var(--bg); text-underline-offset: 4px; }
+  .cta-mark { display: flex; justify-content: flex-end; margin-top: 48px; }
+  .cta-mark :global(.cta-mark-svg) { width: 112px; height: 112px; }
+
+  @media (min-width: 900px) {
+    .hero { padding-block: 112px; }
+    .hero-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+    .hero-text { grid-column: 1 / span 9; gap: 28px; }
+    h1 { font-size: clamp(56px, 5.56vw, 80px); line-height: 1.02; letter-spacing: -0.035em; }
+
+    .split { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; row-gap: 0; }
+    .col-a { grid-column: 1 / span 6; }
+    .col-b { grid-column: 8 / span 5; }
+    .col-a5 { grid-column: 1 / span 5; }
+    .col-b6 { grid-column: 7 / span 6; }
+    .stack-64 { gap: 64px; }
+    .h3 { font-size: 28px; line-height: 1.2; letter-spacing: -0.015em; }
+    .body { font-size: 17px; line-height: 27px; }
+
+    .stat { align-self: start; }
+    .stat-num { font-size: clamp(120px, 11.67vw, 168px); }
+
+    .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; }
+    .control { padding: 28px 0 48px; gap: 14px; }
+
+    .stages { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; }
+    .stage { padding-top: 28px; }
+
+    .review > div { display: grid; grid-template-columns: 200px minmax(0, 1fr); column-gap: 24px; padding: 20px 0; }
+    .review dt { font-size: 15px; }
+    .review dd { font-size: 20px; line-height: 28px; }
+
+    .cta { padding-block: 136px; }
+    .cta-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+    .cta-text { grid-column: 1 / span 8; gap: 36px; }
+    .cta-mark { grid-column: 10 / span 3; margin-top: 0; align-items: center; }
+    .cta-mark :global(.cta-mark-svg) { width: 100%; max-width: 200px; height: auto; aspect-ratio: 1; }
+  }
+</style>
