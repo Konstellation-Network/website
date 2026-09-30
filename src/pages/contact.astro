@@ -1,0 +1,236 @@
+---
+import Base from '../layouts/Base.astro';
+import Arrow from '../components/Arrow.astro';
+import { routes } from '../data/site';
+
+// No backend yet. Set PUBLIC_CONTACT_URL at build time to an endpoint that
+// accepts a JSON POST { name, email, organisation, role, useCase, message };
+// unset, the form explains that enquiries are not open yet.
+const contactUrl = (import.meta.env.PUBLIC_CONTACT_URL as string | undefined) || '';
+
+const useCases = [
+  { value: 'tokenization', label: 'Tokenization' },
+  { value: 'payments', label: 'Payments' },
+  { value: 'enterprise', label: 'Enterprise' },
+  { value: 'other', label: 'Other' },
+];
+---
+<Base
+  title="Contact — Konstellation"
+  description="For institutions and enterprises evaluating Konstellation for tokenization, payments or enterprise applications."
+>
+  <section class="contact" aria-label="Contact">
+    <div class="container grid">
+      <div class="intro">
+        <div class="eyebrow">Contact</div>
+        <h1>Talk to us.</h1>
+        <p class="lead">For institutions and enterprises evaluating Konstellation for tokenization, payments or enterprise applications.</p>
+        <div class="aside-block strong">
+          <span class="aside-title">What happens next</span>
+          <p class="aside-body">A member of the team responds within <span class="tbd">[TBD]</span> business days.</p>
+        </div>
+        <div class="aside-block">
+          <span class="aside-title">Building on devnet?</span>
+          <a href={routes.quickstart} class="link">Start with the Quickstart<Arrow /></a>
+        </div>
+      </div>
+
+      <form class="form" aria-label="Institutional enquiry" novalidate data-contact data-endpoint={contactUrl}>
+        <div class="fields">
+          <div class="field">
+            <label for="c-name">Name</label>
+            <input id="c-name" name="name" class="input" autocomplete="name" required />
+          </div>
+          <div class="field">
+            <label for="c-email">Work email</label>
+            <input id="c-email" name="email" type="email" class="input" autocomplete="email" required aria-describedby="c-email-err" />
+            <span id="c-email-err" class="err" hidden><span class="err-dot" aria-hidden="true"></span>Enter an email address we can reply to.</span>
+          </div>
+          <div class="field">
+            <label for="c-org">Organisation</label>
+            <input id="c-org" name="organisation" class="input" autocomplete="organization" />
+          </div>
+          <div class="field">
+            <label for="c-role">Role</label>
+            <input id="c-role" name="role" class="input" autocomplete="organization-title" />
+          </div>
+        </div>
+
+        <fieldset class="usecase">
+          <legend>Use case</legend>
+          <div class="choices">
+            {useCases.map((u, i) => (
+              <label class="choice">
+                <input type="radio" name="useCase" value={u.value} checked={i === 0} />
+                {u.label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <div class="field">
+          <label for="c-msg">Message</label>
+          <textarea id="c-msg" name="message" class="input textarea" rows="6"></textarea>
+        </div>
+
+        <div class="submit-row">
+          <span class="privacy">How we handle your details: privacy notice <span class="tbd">[TBD]</span></span>
+          <button type="submit" class="btn btn--primary">Send enquiry</button>
+        </div>
+
+        <div aria-live="polite">
+          <div class="status strong" data-state="sent" role="status" hidden>
+            <span class="icon check" aria-hidden="true">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1.5 5.2 4 7.5 8.5 2.5" /></svg>
+            </span>
+            <div class="st-body">
+              <span class="st-title">Thank you. Your enquiry was sent.</span>
+              <p>A member of the team will reply to the email address you gave.</p>
+            </div>
+          </div>
+          <div class="status soft" data-state="error" role="alert" hidden>
+            <span class="icon half" aria-hidden="true"></span>
+            <div class="st-body">
+              <span class="st-title" data-err-title></span>
+              <p data-err-body></p>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-contact]');
+  if (form) {
+    const endpoint = form.dataset.endpoint;
+    const email = form.querySelector<HTMLInputElement>('#c-email')!;
+    const emailErr = form.querySelector<HTMLElement>('#c-email-err')!;
+    const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    const states = form.querySelectorAll<HTMLElement>('[data-state]');
+    const show = (name: string | null) => states.forEach((s) => (s.hidden = s.dataset.state !== name));
+    const fail = (title: string, body: string) => {
+      form.querySelector('[data-err-title]')!.textContent = title;
+      form.querySelector('[data-err-body]')!.textContent = body;
+      show('error');
+    };
+
+    email.addEventListener('input', () => {
+      if (email.validity.valid) {
+        email.removeAttribute('aria-invalid');
+        emailErr.hidden = true;
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!email.value.trim() || !email.validity.valid) {
+        email.setAttribute('aria-invalid', 'true');
+        emailErr.hidden = false;
+        show(null);
+        email.focus();
+        return;
+      }
+      if (!endpoint) {
+        fail('Enquiries are not open yet.', 'This form is not connected. Contact details [TBD].');
+        return;
+      }
+      const data = Object.fromEntries(new FormData(form).entries());
+      submit.disabled = true;
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        if (res.ok) {
+          form.reset();
+          show('sent');
+        } else {
+          fail('Your enquiry was not sent.', 'Try again in a moment.');
+        }
+      } catch {
+        fail('Could not send your enquiry.', 'Check your connection and try again.');
+      } finally {
+        submit.disabled = false;
+      }
+    });
+  }
+</script>
+
+<style>
+  .contact { padding-block: 56px 80px; }
+  .grid { display: flex; flex-direction: column; gap: 48px; }
+  .intro { display: flex; flex-direction: column; gap: 24px; }
+  h1 { font-size: 42px; line-height: 1.06; letter-spacing: -0.03em; font-weight: 400; }
+  .aside-block { display: flex; flex-direction: column; gap: 8px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .aside-block.strong { border-top-color: var(--fg); }
+  .aside-block + .aside-block { gap: 12px; }
+  .aside-title { font-size: 15px; font-weight: 500; }
+  .aside-body { font-size: 16px; line-height: 25px; color: var(--muted); }
+
+  .form { display: flex; flex-direction: column; gap: 24px; }
+  .fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .field { display: flex; flex-direction: column; gap: 8px; }
+  label, legend { font-size: 15px; font-weight: 500; }
+  .input {
+    height: 52px;
+    width: 100%;
+    padding: 0 14px;
+    border: 1px solid #8C8C87;
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 16px;
+  }
+  .textarea { height: 176px; padding: 14px; line-height: 24px; resize: vertical; }
+  .input:focus, .input[aria-invalid='true'] { border-color: var(--fg); outline: 2px solid var(--fg); outline-offset: 1px; }
+  .err { display: flex; gap: 8px; align-items: center; font-size: 13px; line-height: 20px; }
+  .err-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--fg); }
+
+  .usecase { border: 0; margin: 0; padding: 0; }
+  legend { padding: 0; margin-bottom: 16px; }
+  .choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .choice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 0 14px;
+    border: 1px solid #8C8C87;
+    border-radius: var(--radius);
+    font-weight: 400;
+    cursor: pointer;
+  }
+  .choice:has(input:checked) { border-color: var(--fg); }
+  .choice:has(input:focus-visible) { outline: 2px solid var(--fg); outline-offset: 1px; }
+  .choice input { width: 18px; height: 18px; margin: 0; accent-color: var(--fg); }
+
+  .submit-row { display: flex; flex-direction: column; align-items: stretch; gap: 16px; }
+  .privacy { font-size: 13px; line-height: 20px; color: var(--muted); }
+  .submit-row .btn:disabled { opacity: .6; cursor: progress; }
+
+  .status { display: flex; gap: 16px; align-items: flex-start; padding: 24px 28px; border-radius: var(--radius); }
+  .status.soft { background: var(--alt); border: 1px solid var(--line); }
+  .status.strong { background: var(--bg); border: 1px solid var(--fg); }
+  .icon { flex-shrink: 0; }
+  .check { width: 20px; height: 20px; margin-top: 3px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--fg); color: var(--bg); }
+  .half { width: 20px; height: 10px; margin-top: 8px; border-radius: 10px 10px 0 0; background: var(--fg); }
+  .st-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .st-title { font-size: 17px; font-weight: 500; }
+  .st-body p { font-size: 15px; line-height: 23px; color: var(--muted); }
+
+  @media (min-width: 900px) {
+    .contact { padding-block: 112px 136px; }
+    .grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+    .intro { grid-column: 1 / span 5; gap: 28px; }
+    h1 { font-size: clamp(56px, 5.56vw, 80px); line-height: 1.02; letter-spacing: -0.035em; }
+    .aside-body { font-size: 17px; line-height: 27px; }
+    .form { grid-column: 7 / span 6; padding-top: 8px; }
+    .fields { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; }
+    .choices { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .submit-row { flex-direction: row; align-items: center; justify-content: space-between; }
+  }
+</style>
