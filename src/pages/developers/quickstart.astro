@@ -4,7 +4,7 @@ import DevPage from '../../components/DevPage.astro';
 import KeyValueRows from '../../components/KeyValueRows.astro';
 import CodePanel from '../../components/CodePanel.astro';
 import Arrow from '../../components/Arrow.astro';
-import { devnet, routes } from '../../data/site';
+import { devnet, devnetAddChain as addChain, routes } from '../../data/site';
 
 const rpc = devnet.rpc ?? '[TBD]';
 
@@ -15,17 +15,6 @@ const walletRows = [
   { label: 'RPC URL', value: devnet.rpc },
   { label: 'Block explorer', value: devnet.explorer },
 ];
-
-// Parameters for wallet_addEthereumChain; only usable once the RPC is published.
-const addChain = devnet.rpc
-  ? JSON.stringify({
-      chainId: '0x' + devnet.chainId.toString(16),
-      chainName: devnet.displayName,
-      nativeCurrency: { name: devnet.symbol, symbol: devnet.symbol, decimals: 18 },
-      rpcUrls: [devnet.rpc],
-      ...(devnet.explorer ? { blockExplorerUrls: [devnet.explorer] } : {}),
-    })
-  : null;
 
 const foundry = `<span class="cm"># In an empty working directory: create a Foundry project</span>
 forge init hello-konstellation
@@ -118,26 +107,6 @@ const steps = [
     </nav>
   </DevPage>
 </Base>
-
-<script>
-  // "Add to wallet": EIP-3085 wallet_addEthereumChain with the devnet settings.
-  const btn = document.querySelector<HTMLButtonElement>('[data-add-chain]');
-  const msg = document.querySelector<HTMLElement>('[data-wallet-msg]');
-  type Eth = { request: (a: { method: string; params: unknown[] }) => Promise<unknown> };
-  btn?.addEventListener('click', async () => {
-    const eth = (window as unknown as { ethereum?: Eth }).ethereum;
-    if (!eth) {
-      if (msg) msg.textContent = 'No browser wallet found. Add the network manually with the settings above.';
-      return;
-    }
-    try {
-      await eth.request({ method: 'wallet_addEthereumChain', params: [JSON.parse(btn.dataset.addChain!)] });
-      if (msg) msg.textContent = 'devnet-1 added to your wallet.';
-    } catch {
-      if (msg) msg.textContent = 'The wallet did not add the network. You can add it manually with the settings above.';
-    }
-  });
-</script>
 
 <style>
   .steps { display: flex; flex-direction: column; gap: 40px; }

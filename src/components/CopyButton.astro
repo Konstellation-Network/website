@@ -1,0 +1,33 @@
+---
+// Outlined "Copy" button that copies a literal value (see scripts/site.ts).
+interface Props {
+  value: string;
+  label: string;
+}
+const { value, label } = Astro.props;
+---
+<button type="button" class="copy" data-copy-text={value} aria-label={`Copy ${label}`}>
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><rect x="4.5" y="4.5" width="8" height="8" rx="1" /><path d="M9.5 2.5V1.5H1.5v8h1" /></svg>
+  <span data-copy-label aria-live="polite">Copy</span>
+</button>
+
+<style>
+  .copy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 84px;
+    height: 36px;
+    padding: 0 12px;
+    background: var(--bg);
+    color: var(--fg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color 150ms;
+  }
+  .copy:hover { border-color: var(--fg); }
+</style>

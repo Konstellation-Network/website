@@ -124,6 +124,31 @@ document.querySelectorAll<HTMLButtonElement>('[data-copy], [data-copy-text]').fo
   });
 });
 
+// ---------- Add to wallet ----------
+// <button data-add-chain='{…EIP-3085 params…}'>; messages go to the nearest
+// [data-wallet-msg] in the same section, if there is one.
+
+type Eth = { request: (a: { method: string; params: unknown[] }) => Promise<unknown> };
+document.querySelectorAll<HTMLButtonElement>('[data-add-chain]').forEach((btn) => {
+  const msg = btn.closest('section')?.querySelector<HTMLElement>('[data-wallet-msg]');
+  const say = (text: string) => { if (msg) msg.textContent = text; };
+  btn.addEventListener('click', async () => {
+    const params = btn.dataset.addChain;
+    if (!params) return;
+    const eth = (window as unknown as { ethereum?: Eth }).ethereum;
+    if (!eth) {
+      say('No browser wallet found. Add the network manually with the settings above.');
+      return;
+    }
+    try {
+      await eth.request({ method: 'wallet_addEthereumChain', params: [JSON.parse(params)] });
+      say('Network added to your wallet.');
+    } catch {
+      say('The wallet did not add the network. You can add it manually with the settings above.');
+    }
+  });
+});
+
 // ---------- Tabs ----------
 // <div data-tabs> with [role=tab] buttons (aria-controls → [role=tabpanel]).
 // Click or arrow keys select; panels are toggled with `hidden`.

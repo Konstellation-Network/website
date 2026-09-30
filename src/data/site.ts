@@ -103,6 +103,18 @@ export const devnet = {
   explorer: devnetNet.endpoints.explorer,
 };
 
+// EIP-3085 wallet_addEthereumChain params for devnet-1, as a JSON string for
+// data-add-chain. null until the RPC URL is published (a wallet needs one).
+export const devnetAddChain: string | null = devnet.rpc
+  ? JSON.stringify({
+      chainId: '0x' + devnet.chainId.toString(16),
+      chainName: devnet.displayName,
+      nativeCurrency: { name: devnet.symbol, symbol: devnet.symbol, decimals: 18 },
+      rpcUrls: [devnet.rpc],
+      ...(devnet.explorer ? { blockExplorerUrls: [devnet.explorer] } : {}),
+    })
+  : null;
+
 // The `faucet` repo's service. Set at build time; unset = the form explains
 // that the faucet is not open yet. The faucet must list this site's origin in
 // its ALLOWED_ORIGINS for the cross-origin POST to be accepted.
