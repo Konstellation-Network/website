@@ -1,0 +1,519 @@
+---
+import Base from '../../layouts/Base.astro';
+import Arrow from '../../components/Arrow.astro';
+import Mark from '../../components/Mark.astro';
+import CodePanel from '../../components/CodePanel.astro';
+import CopyButton from '../../components/CopyButton.astro';
+import SourcePanel from '../../components/SourcePanel.astro';
+import GateList from '../../components/scriipture/GateList.astro';
+import { devnet } from '../../data/site';
+
+const repo = 'https://github.com/Konstellation-Network/Scriipture';
+const example = (dir: string) => `${repo}/tree/main/examples/${dir}`;
+
+// Counter.ts and its Solidity are the README example: the .sol is what
+// `scriipture build` emits for the .ts (Scriipture README, "The Solidity Scriipture emits").
+const counterTs = `<span class="kw">import</span> { storage, <span class="kw">view</span>, onlyOwner } <span class="kw">from</span> <span class="acc">"scriipture"</span>;
+
+<span class="kw">export</span> <span class="kw">class</span> Counter {
+  <span class="acc">@storage</span> count: <span class="kw">bigint</span> = 0n;
+
+  <span class="acc">@onlyOwner</span>
+  increment(): <span class="kw">void</span> {
+    require(<span class="kw">this</span>.count &lt; 1000000n, <span class="acc">"Max reached"</span>);
+    <span class="kw">this</span>.count = <span class="kw">this</span>.count + 1n;
+  }
+
+  <span class="acc">@view</span>
+  current(): <span class="kw">bigint</span> {
+    <span class="kw">return</span> <span class="kw">this</span>.count;
+  }
+}`;
+
+const counterSol = `<span class="cm">// SPDX-License-Identifier: MIT</span>
+<span class="kw">pragma</span> <span class="kw">solidity</span> ^0.8.20;
+
+<span class="kw">import</span> <span class="acc">"@openzeppelin/contracts/access/Ownable.sol"</span>;
+
+<span class="kw">contract</span> Counter <span class="kw">is</span> Ownable {
+    <span class="kw">error</span> MaxReached();
+
+    <span class="kw">uint256</span> <span class="kw">public</span> count;
+
+    <span class="kw">constructor</span>() Ownable(msg.sender) {}
+
+    <span class="kw">function</span> increment() <span class="kw">public</span> onlyOwner {
+        <span class="kw">if</span> (!(count &lt; 1000000)) {
+            <span class="kw">revert</span> MaxReached();
+        }
+        count = count + 1;
+    }
+
+    <span class="kw">function</span> current() <span class="kw">public</span> <span class="kw">view</span> <span class="kw">returns</span> (<span class="kw">uint256</span>) {
+        <span class="kw">return</span> count;
+    }
+}`;
+
+// examples/erc20-token/MyToken.ts in the Scriipture repo, verbatim.
+const myTokenTs = `<span class="kw">import</span> { Address, onlyOwner, msg } <span class="kw">from</span> <span class="acc">"scriipture"</span>;
+<span class="kw">import</span> { ERC20 } <span class="kw">from</span> <span class="acc">"scriipture/standards"</span>;
+
+<span class="kw">export</span> <span class="kw">class</span> MyToken <span class="kw">extends</span> ERC20 {
+  <span class="kw">constructor</span>(initialSupply: <span class="kw">bigint</span>) {
+    <span class="kw">super</span>(<span class="acc">"MyToken"</span>, <span class="acc">"MTK"</span>);
+    <span class="kw">this</span>._mint(msg.sender, initialSupply);
+  }
+
+  <span class="acc">@onlyOwner</span>
+  mint(to: Address, amount: <span class="kw">bigint</span>): <span class="kw">void</span> {
+    <span class="kw">this</span>._mint(to, amount);
+  }
+}`;
+
+const rpc = devnet.rpc ?? 'https://&lt;devnet-rpc&gt; [TBD]';
+const configMjs = `<span class="cm">// scriipture.config.mjs</span>
+<span class="kw">import</span> { defineConfig } <span class="kw">from</span> <span class="str">"scriipture"</span>;
+
+<span class="kw">export</span> <span class="kw">default</span> defineConfig({
+  networks: {
+    <span class="str">"konstellation-devnet"</span>: {
+      rpcUrl: <span class="str">"${rpc}"</span>,
+      chainId: ${devnet.chainId},
+      nativeCurrency: { name: <span class="str">"${devnet.symbol}"</span>, symbol: <span class="str">"${devnet.symbol}"</span>, decimals: 18 },
+    },
+  },
+});`;
+
+const deployTerm = `<span class="cm"># From your project directory</span>
+npx scriipture deploy Counter -n konstellation-devnet`;
+
+const done = [
+  { title: 'Inferred the Ownable base', html: '<code>@onlyOwner</code> implies an owner, so Scriipture added <code>Ownable</code> and its constructor.' },
+  { title: 'Custom errors, not strings', html: '<code>require(…, "Max reached")</code> became <code>error MaxReached()</code>: smaller bytecode and cheaper reverts.' },
+  { title: 'Dropped the redundant initialiser', html: '<code>count = 0n</code> is already the default, so the Solidity leaves it out.' },
+];
+
+const gates = [
+  { name: 'Native validator', html: '26 rules, including <code>tx.origin</code> auth, <code>selfdestruct</code>, unsafe <code>delegatecall</code> and zero-address mint.' },
+  { name: 'solc compile', html: 'The generated Solidity must compile cleanly.' },
+  { name: 'SMTChecker', html: 'Formal checks for overflow, underflow and division by zero.' },
+  { name: 'Mythril', html: 'Symbolic execution for deeper paths. Opt-in with <code>--deep</code>.' },
+  { name: 'Slither', html: 'Static analysis with more than 70 detectors.' },
+  { name: 'Pattern library', html: 'Only known-safe OpenZeppelin v5 and forge-std imports are allowed.' },
+  { name: 'Fuzz tests', html: 'Generated automatically: 1,000 random inputs per public method.' },
+  { name: 'Invariant tests', html: '<code>@invariant</code> rules are fuzzed, and a formal proof is attempted.' },
+  { name: 'Attestation', html: 'A reproducible-build record of every tool version and every gate’s real result.' },
+];
+
+const institutions = [
+  { title: 'The Solidity is the artifact', html: 'What ships is plain Solidity. Security teams and external auditors read, diff and review it like any other contract. Nothing is hidden in a compiler.' },
+  { title: 'Every deploy carries an attestation', html: 'It records which checks ran, with which tool versions, and what they found, then the network, address and transaction. A record a risk or compliance function can keep.' },
+  { title: 'audit-pack for auditor handoff', html: '<code>audit-pack</code> bundles each contract for handoff to an auditor.' },
+];
+
+const keys = [
+  { term: 'Signing', desc: 'Deployment opens your browser wallet (MetaMask, Rabby, Coinbase Wallet) to sign, the same as any web app.' },
+  { term: 'Keys', desc: 'Private keys never touch disk. Local hot wallets exist, but only if you opt in.' },
+  { term: 'Telemetry', desc: 'None. Scriipture runs entirely on your machine.' },
+  { term: 'Licence', desc: 'MIT. Open source.' },
+];
+
+const steps = [
+  { title: 'Install', cmd: 'npm install scriipture', note: 'The package is not published yet. <span class="tbd">[TBD]</span>' },
+  { title: 'Check your toolchain', cmd: 'npx scriipture doctor --fix', note: 'Checks your local toolchain and fixes what it can. Scriipture uses Foundry under the hood.' },
+  { title: 'Create a project', cmd: 'npx scriipture init my-token', note: 'Scaffolds a new project in a my-token directory.' },
+  {
+    title: 'Deploy',
+    cmd: 'cd my-token\nnpx scriipture secure-deploy contracts -c Counter -n konstellation-devnet',
+    note: 'Runs every gate first. Your browser wallet opens to sign.',
+  },
+];
+
+const examples = [
+  { name: 'Counter', html: 'An owner-restricted counter.', dir: 'counter' },
+  { name: 'ERC-20 token', html: 'A mintable token built on <code>ERC20</code> from <code>scriipture/standards</code>.', dir: 'erc20-token' },
+  { name: 'Vault', html: 'Holds deposits and returns them to their owners.', dir: 'vault' },
+  { name: 'Yield vault', html: 'A vault that accrues yield to its depositors.', dir: 'yield-vault' },
+  { name: 'Staking', html: 'Stake a token and track each position.', dir: 'staking' },
+];
+
+const extIcon = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 2h6v6M10 2 2 10" /></svg>';
+---
+<Base
+  title="Scriipture — Konstellation"
+  description="Scriipture is Konstellation’s TypeScript language for smart contracts. Write what you know, review what ships, and deploy only after nine security checks pass."
+>
+  <!-- Hero -->
+  <section class="hero" aria-label="Introduction">
+    <div class="container hero-grid">
+      <div class="hero-text">
+        <div class="eyebrow">Scriipture · v0.1.0</div>
+        <h1>Smart contracts in TypeScript. Auditable Solidity out.</h1>
+        <p class="lead hero-lead">Scriipture is Konstellation’s TypeScript language for smart contracts. Write what you know, review what ships, and deploy only after nine security checks pass.</p>
+        <div class="btn-row">
+          <a href="#" class="btn btn--primary">Get started <span class="tbd">[TBD]</span></a>
+          <a href={repo} class="btn btn--outline" target="_blank" rel="noopener">View on GitHub<Fragment set:html={extIcon} /><span class="sr-only"> (opens in a new tab)</span></a>
+        </div>
+        <div class="install">
+          <div class="install-box">
+            <code><span class="prompt" aria-hidden="true">$ </span>npm install scriipture</code>
+            <CopyButton value="npm install scriipture" label="install command" />
+          </div>
+          <span class="install-note">[TBD — publishing soon] The npm package is not published yet. v0.1.0.</span>
+        </div>
+      </div>
+      <div class="hero-ring-wrap"><div class="hero-ring" aria-hidden="true"></div></div>
+    </div>
+  </section>
+
+  <!-- What you write, what ships -->
+  <section class="section section--alt" aria-labelledby="out-h">
+    <div class="container stack gap-lg">
+      <div class="intro">
+        <div class="eyebrow">Output</div>
+        <h2 id="out-h" class="h2" data-reveal>What you write, what ships.</h2>
+        <p class="lead measure">The TypeScript on the left is the whole source. The Solidity on the right is Scriipture’s real output, built on OpenZeppelin v5. The same source and version always produce byte-identical Solidity.</p>
+      </div>
+      <div class="compare" role="group" aria-label="Scriipture compiles Counter.ts into Counter.sol">
+        <div class="fade-l"><SourcePanel filename="Counter.ts" language="TypeScript" html={counterTs} /></div>
+        <div class="compare-arrow" aria-hidden="true">
+          <span><svg width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M1 7h11M8 3l4 4-4 4" /></svg></span>
+        </div>
+        <div class="fade-r"><SourcePanel filename="Counter.sol" language="Solidity · generated" html={counterSol} /></div>
+      </div>
+      <div class="done">
+        <h3 class="done-h">Done for you in this example</h3>
+        <ul class="done-list">
+          {done.map((d, i) => (
+            <li>
+              <div class="eyebrow">{String(i + 1).padStart(2, '0')}</div>
+              <span class="done-title">{d.title}</span>
+              <p class="rich" set:html={d.html} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Security gates -->
+  <section class="section" aria-labelledby="gates-h">
+    <div class="container split">
+      <div class="split-l stack gap-24">
+        <div class="eyebrow">Security</div>
+        <h2 id="gates-h" class="h2" data-reveal>Nine checks before anything deploys.</h2>
+        <p class="lead"><span class="tbd">scriipture verify</span> runs the gates in order. Any failure blocks deployment.</p>
+        <p class="body-text"><span class="tbd">secure-deploy</span> refuses to deploy unless every gate passed. A skipped gate needs a written justification, and it is recorded as skipped, never as passed.</p>
+      </div>
+      <div class="split-r"><GateList gates={gates} /></div>
+    </div>
+  </section>
+
+  <!-- For institutions -->
+  <section class="section ruled" aria-labelledby="inst-h">
+    <div class="container stack gap-lg">
+      <div class="intro">
+        <div class="eyebrow">For institutions</div>
+        <h2 id="inst-h" class="h2" data-reveal>Built for teams that answer to someone.</h2>
+        <p class="lead measure">Enterprise and fintech engineering teams already write TypeScript. With Scriipture they can build on-chain logic without hiring Solidity specialists first, and still hand reviewers code they can read.</p>
+      </div>
+      <div class="three">
+        {institutions.map((c, i) => (
+          <div class="three-item">
+            <div class="eyebrow">{String(i + 1).padStart(2, '0')}</div>
+            <h3 class="three-title">{c.title}</h3>
+            <p class="rich" set:html={c.html} />
+          </div>
+        ))}
+      </div>
+      <div class="callout">
+        <p>Scriipture’s security gates catch known classes of bugs. They do not replace an independent audit for contracts that will hold value.</p>
+        <div class="notch" aria-hidden="true"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Keys and privacy -->
+  <section class="section section--alt" aria-labelledby="keys-h">
+    <div class="container split">
+      <div class="split-l stack gap-20">
+        <div class="eyebrow">Keys and privacy</div>
+        <h2 id="keys-h" class="h2" data-reveal>Keys stay in the wallet.</h2>
+      </div>
+      <dl class="split-r keys">
+        {keys.map((k) => (
+          <div>
+            <dt>{k.term}</dt>
+            <dd>{k.desc}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+
+  <!-- Deploy to Konstellation -->
+  <section class="section" aria-labelledby="deploy-h">
+    <div class="container split">
+      <div class="split-l stack gap-24">
+        <div class="eyebrow">Deploy</div>
+        <h2 id="deploy-h" class="h2" data-reveal>Deploy to Konstellation.</h2>
+        <p class="lead">Konstellation is not a built-in deploy target yet. Add it as a network in your config file: it needs only an rpcUrl and a chainId. Devnet is chain ID {devnet.chainId}.</p>
+      </div>
+      <div class="split-r stack gap-16">
+        <CodePanel id="scr-config" filename="scriipture.config.mjs" html={configMjs} />
+        <CodePanel id="scr-deploy" filename="terminal" html={deployTerm} />
+      </div>
+    </div>
+  </section>
+
+  <!-- Quickstart -->
+  <section class="section ruled" aria-labelledby="qs-h">
+    <div class="container stack gap-lg">
+      <div class="intro">
+        <div class="eyebrow">Quickstart</div>
+        <h2 id="qs-h" class="h2" data-reveal>Four steps to a deployed contract.</h2>
+      </div>
+      <ol class="steps">
+        {steps.map((s, i) => (
+          <li>
+            <div class="step-head">
+              <span class:list={['num', { filled: i === steps.length - 1 }]} aria-hidden="true">{i + 1}</span>
+              <span class="step-title">{s.title}</span>
+            </div>
+            <pre class="cmd">{s.cmd}</pre>
+            <p class="note" set:html={s.note} />
+          </li>
+        ))}
+      </ol>
+      <div class="qs-notes">
+        <p class="body-text">Errors point at your TypeScript: <span class="tbd">scriipture trace</span> maps Solidity errors back to the line they came from.</p>
+        <p class="body-text">Use it as a library as well as a CLI, with <span class="tbd">parseContractFiles</span> and <span class="tbd">emitProgram</span>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Examples -->
+  <section class="section section--alt" aria-labelledby="ex-h">
+    <div class="container split">
+      <div class="split-l stack gap-32">
+        <div class="stack gap-20">
+          <div class="eyebrow">Examples</div>
+          <h2 id="ex-h" class="h2" data-reveal>Example contracts.</h2>
+        </div>
+        <ul class="examples">
+          {examples.map((e) => (
+            <li>
+              <div class="ex-text">
+                <span class="ex-name">{e.name}</span>
+                <span class="ex-desc rich" set:html={e.html} />
+              </div>
+              <a href={example(e.dir)} class="link ex-link" target="_blank" rel="noopener" aria-label={`${e.name} example on GitHub (opens in a new tab)`}>
+                GitHub<Fragment set:html={extIcon} />
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div class="split-r">
+        <SourcePanel filename="MyToken.ts" language="TypeScript" html={myTokenTs} />
+      </div>
+    </div>
+  </section>
+
+  <!-- Next step (contrast section) -->
+  <section class="cta inverted" aria-labelledby="cta-h">
+    <div class="container cta-grid">
+      <div class="cta-text">
+        <h2 id="cta-h" class="h2" data-reveal>Start building in TypeScript.</h2>
+        <div class="btn-row">
+          <a href="#" class="btn btn--primary">Get started <span class="tbd">[TBD]</span></a>
+        </div>
+      </div>
+      <div class="cta-mark"><Mark size={200} class="cta-mark-svg" /></div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .stack { display: flex; flex-direction: column; }
+  .gap-16 { gap: 16px; }
+  .gap-20 { gap: 20px; }
+  .gap-24 { gap: 24px; }
+  .gap-32 { gap: 32px; }
+  .gap-lg { gap: 40px; }
+  .intro { display: flex; flex-direction: column; gap: 20px; }
+  .measure { max-width: 760px; }
+  .ruled { border-top: 1px solid var(--line); }
+  .rich { font-size: 16px; line-height: 25px; color: var(--muted); text-wrap: pretty; }
+  .rich :global(code) { font-family: var(--mono); font-size: 0.88em; letter-spacing: 0; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  .split { display: flex; flex-direction: column; gap: 40px; }
+  .split-r { min-width: 0; }
+
+  /* ----- Hero ----- */
+  .hero { padding-block: 56px; }
+  .hero-text { display: flex; flex-direction: column; gap: 24px; }
+  h1 { font-size: 42px; line-height: 1.06; letter-spacing: -0.03em; font-weight: 400; text-wrap: balance; }
+  .hero-lead { max-width: 680px; }
+  .btn .tbd { font-weight: 400; }
+  .install { display: flex; flex-direction: column; gap: 8px; max-width: 520px; }
+  .install-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    height: 56px;
+    padding: 0 10px 0 18px;
+    border: 1px solid var(--fg);
+    border-radius: var(--radius);
+  }
+  .install-box code { font-family: var(--mono); font-size: 14px; }
+  .prompt { color: var(--muted); }
+  .install-note { font-family: var(--mono); font-size: 12px; line-height: 18px; color: var(--muted); }
+  .hero-ring-wrap { display: flex; justify-content: flex-end; margin-top: 48px; }
+  .hero-ring { width: 200px; height: 200px; border-radius: 50%; border: 56px solid var(--fg); }
+
+  /* ----- Output ----- */
+  .compare { display: flex; flex-direction: column; }
+  .compare-arrow { display: flex; align-items: center; justify-content: center; height: 56px; }
+  .compare-arrow span {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--fg);
+    border-radius: 50%;
+    background: var(--bg);
+    color: var(--fg);
+    transform: rotate(90deg);
+  }
+  @keyframes kfade { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: none; } }
+  .fade-l { animation: kfade .7s var(--ease) .1s both; min-width: 0; display: flex; flex-direction: column; }
+  .fade-r { animation: kfade .7s var(--ease) .45s both; min-width: 0; display: flex; flex-direction: column; }
+  .fade-l > :global(*), .fade-r > :global(*) { flex-grow: 1; }
+  @media (prefers-reduced-motion: reduce) { .fade-l, .fade-r { animation: none; } }
+
+  .done { display: flex; flex-direction: column; gap: 16px; }
+  .done-h { font-size: 15px; font-weight: 500; }
+  .done-list > li { border-top: 1px solid var(--fg); padding: 18px 0 24px; display: flex; flex-direction: column; gap: 8px; }
+  .done-title { font-size: 18px; line-height: 1.3; font-weight: 500; }
+
+  /* ----- Institutions ----- */
+  .three-item { border-top: 1px solid var(--fg); padding: 20px 0 28px; display: flex; flex-direction: column; gap: 10px; }
+  .three-title { font-size: 22px; line-height: 1.25; letter-spacing: -0.01em; font-weight: 500; }
+  .callout { position: relative; overflow: hidden; padding: 20px; border: 1px solid var(--fg); border-radius: var(--radius); }
+  .callout p { font-size: 18px; line-height: 1.4; letter-spacing: -0.01em; max-width: 760px; }
+  .notch {
+    position: absolute;
+    top: -24px;
+    right: -24px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+  }
+
+  /* ----- Keys ----- */
+  .keys { border-bottom: 1px solid var(--line); }
+  .keys > div { border-top: 1px solid var(--line); padding: 16px 0; display: flex; flex-direction: column; gap: 4px; }
+  .keys dt { font-size: 15px; color: var(--muted); }
+  .keys dd { font-size: 16px; line-height: 27px; }
+
+  /* ----- Quickstart ----- */
+  .steps { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 32px; }
+  .steps > li { display: flex; flex-direction: column; gap: 14px; border-top: 1px solid var(--fg); padding-top: 20px; min-width: 0; }
+  .step-head { display: flex; gap: 14px; align-items: center; }
+  .num {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--fg);
+    border-radius: 50%;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .num.filled { background: var(--fg); color: var(--bg); }
+  .step-title { font-size: 20px; font-weight: 500; }
+  .cmd {
+    margin: 0;
+    padding: 14px 16px;
+    background: var(--code-bg);
+    color: var(--code-fg);
+    border: 1px solid var(--code-border);
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 21px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .qs-notes { display: flex; flex-direction: column; gap: 16px; border-top: 1px solid var(--line); padding-top: 24px; }
+
+  /* ----- Examples ----- */
+  .examples { border-bottom: 1px solid var(--line); }
+  .examples > li { border-top: 1px solid var(--line); padding: 18px 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+  .examples > li:first-child { border-top-color: var(--fg); }
+  .ex-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .ex-name { font-size: 18px; font-weight: 500; }
+  .ex-desc { font-size: 15px; line-height: 22px; }
+  .ex-link { flex-shrink: 0; font-size: 15px; gap: 6px; }
+
+  /* ----- CTA ----- */
+  .cta { padding-block: 80px; }
+  .cta-text { display: flex; flex-direction: column; gap: 32px; }
+  .cta .h2 { color: inherit; }
+  .cta-mark { display: flex; justify-content: flex-end; margin-top: 48px; }
+  .cta-mark :global(.cta-mark-svg) { width: 112px; height: 112px; }
+
+  /* ----- Desktop ----- */
+  @media (min-width: 900px) {
+    .gap-lg { gap: 56px; }
+    .rich { font-size: 17px; line-height: 27px; }
+
+    .hero { padding-block: 112px; }
+    .hero-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+    .hero-text { grid-column: 1 / span 8; gap: 28px; }
+    h1 { font-size: clamp(56px, 5.56vw, 80px); line-height: 1.02; letter-spacing: -0.035em; }
+    .install-box code { font-size: 15px; }
+    .hero-ring-wrap { grid-column: 9 / span 4; margin-top: 0; align-items: center; }
+    .hero-ring { width: clamp(220px, 22.2vw, 320px); height: auto; aspect-ratio: 1; border-width: clamp(63px, 6.39vw, 92px); }
+
+    .compare { display: grid; grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr); align-items: stretch; }
+    .compare-arrow { height: auto; }
+    .compare-arrow span { transform: none; }
+
+    .done-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 24px; }
+    .done-list > li { padding: 24px 0 8px; }
+    .done-title { font-size: 20px; }
+
+    .split { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+    .split-l { grid-column: 1 / span 5; }
+    .split-r { grid-column: 7 / span 6; }
+
+    .three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 24px; }
+    .three-item { padding: 28px 0 48px; gap: 14px; }
+    .three-title { font-size: 28px; line-height: 1.2; letter-spacing: -0.015em; }
+    .three-item .rich { max-width: 520px; }
+    .callout { padding: 32px 40px; }
+    .callout p { font-size: 22px; }
+    .notch { top: -32px; right: -32px; width: 64px; height: 64px; }
+
+    .keys > div { display: grid; grid-template-columns: 160px minmax(0, 1fr); column-gap: 24px; }
+    .keys dd { font-size: 18px; }
+
+    .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; row-gap: 40px; }
+    .qs-notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; }
+
+    .cta { padding-block: 136px; }
+    .cta-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+    .cta-text { grid-column: 1 / span 8; gap: 36px; }
+    .cta-mark { grid-column: 10 / span 3; margin-top: 0; align-items: center; }
+    .cta-mark :global(.cta-mark-svg) { width: 100%; max-width: 200px; height: auto; aspect-ratio: 1; }
+  }
+</style>
