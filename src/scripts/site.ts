@@ -104,21 +104,55 @@ if (mDevTrigger && mDev) {
 }
 
 // ---------- Copy buttons ----------
+// data-copy="<element id>" copies that element's text; data-copy-text="…" copies the literal.
 
-document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
-  const target = document.getElementById(btn.dataset.copy ?? '');
+document.querySelectorAll<HTMLButtonElement>('[data-copy], [data-copy-text]').forEach((btn) => {
   const label = btn.querySelector<HTMLElement>('[data-copy-label]');
   let timer: number | undefined;
   btn.addEventListener('click', async () => {
-    if (!target) return;
+    const target = btn.dataset.copy ? document.getElementById(btn.dataset.copy) : null;
+    const text = btn.dataset.copyText ?? target?.innerText.trim();
+    if (!text) return;
     try {
-      await navigator.clipboard.writeText(target.innerText.trim());
+      await navigator.clipboard.writeText(text);
     } catch {
       return;
     }
     if (label) label.textContent = 'Copied';
     window.clearTimeout(timer);
     timer = window.setTimeout(() => { if (label) label.textContent = 'Copy'; }, 1600);
+  });
+});
+
+// ---------- Tabs ----------
+// <div data-tabs> with [role=tab] buttons (aria-controls → [role=tabpanel]).
+// Click or arrow keys select; panels are toggled with `hidden`.
+
+document.querySelectorAll<HTMLElement>('[data-tabs]').forEach((group) => {
+  const tabs = Array.from(group.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+  const select = (tab: HTMLButtonElement, focus = false) => {
+    tabs.forEach((t) => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+      const panel = document.getElementById(t.getAttribute('aria-controls') ?? '');
+      if (panel) panel.hidden = !on;
+    });
+    if (focus) tab.focus();
+  };
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => select(tab));
+    tab.addEventListener('keydown', (e) => {
+      let next = -1;
+      if (e.key === 'ArrowRight') next = (i + 1) % tabs.length;
+      else if (e.key === 'ArrowLeft') next = (i - 1 + tabs.length) % tabs.length;
+      else if (e.key === 'Home') next = 0;
+      else if (e.key === 'End') next = tabs.length - 1;
+      if (next >= 0) {
+        e.preventDefault();
+        select(tabs[next], true);
+      }
+    });
   });
 });
 

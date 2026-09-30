@@ -1,6 +1,7 @@
 ---
 // Dark code panel with a filename header and a Copy button. The code is passed
-// as pre-highlighted HTML using .kw (keyword) and .str (string) spans.
+// as pre-highlighted HTML using .kw (keyword), .str (string) and .cm
+// (comment) spans.
 interface Props {
   id: string;
   filename: string;
@@ -56,15 +57,16 @@ const { id, filename, html } = Astro.props;
   .copy:hover { border-color: #FFFFFF; }
   pre {
     margin: 0;
-    padding: 24px 20px;
+    padding: 20px 16px;
     font-family: var(--mono);
-    font-size: 13px;
-    line-height: 22px;
+    font-size: 12.5px;
+    line-height: 20px;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
   pre :global(.kw) { color: var(--code-kw); font-weight: 500; }
   pre :global(.str) { color: var(--code-str); }
+  pre :global(.cm) { color: #8C8C87; }
   .notch {
     position: absolute;
     top: -24px;

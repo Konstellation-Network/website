@@ -69,6 +69,9 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* `hidden` always wins over component display rules (tabs, menus, states). */
+[hidden] { display: none !important; }
+
 html { -webkit-text-size-adjust: 100%; }
 
 body {
@@ -240,3 +243,40 @@ select:focus-visible, textarea:focus-visible {
   .js [data-reveal] { opacity: 1; transform: none; transition: none; }
   *, *::before, *::after { transition-duration: 0ms !important; }
 }
+
+/* ---------- Tabs ---------- */
+
+.tablist { display: flex; gap: 20px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tab {
+  flex-shrink: 0;
+  height: 48px;
+  padding: 0 4px;
+  margin-bottom: -1px;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 15px;
+  cursor: pointer;
+  transition: color 150ms;
+}
+.tab:hover { color: var(--fg); }
+.tab[aria-selected='true'] { color: var(--fg); border-bottom-color: var(--fg); }
+.tab:focus-visible { outline-offset: -2px; }
+@media (min-width: 900px) {
+  .tablist { gap: 32px; }
+  .tab { font-size: 16px; }
+}
+
+/* ---------- Developers page bits ---------- */
+
+.stack { display: flex; flex-direction: column; }
+.body-text { font-size: 16px; line-height: 25px; color: var(--muted); text-wrap: pretty; }
+.note { font-size: 14px; line-height: 21px; color: var(--muted); text-wrap: pretty; }
+@media (min-width: 900px) {
+  .body-text { font-size: 17px; line-height: 27px; }
+  .note { font-size: 15px; line-height: 23px; }
+}
+
+.btn[disabled], .btn[aria-disabled='true'] { opacity: .45; cursor: not-allowed; pointer-events: none; }
