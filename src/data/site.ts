@@ -115,6 +115,19 @@ export const devnetAddChain: string | null = devnet.rpc
     })
   : null;
 
+// Canonical addresses, the same on every network. Mirrors
+// chain-config/src/contracts.ts (tested against contracts/preinstalls).
+export const canonicalContracts: { name: string; desc: string; descCode?: string[]; address: string }[] = [
+  { name: 'Multicall3', desc: 'Batch read calls', address: '0xcA11bde05977b3631167028862bE2a173976CA11' },
+  { name: 'Permit2', desc: 'Signature-based token approvals', address: '0x000000000022D473030F116dDEE9F6B43aC78BA3' },
+  { name: 'EntryPoint v0.7', desc: 'ERC-4337 entry point', address: '0x0000000071727De22E5E9d8BAf0edAc6f37da032' },
+  { name: 'EntryPoint v0.8', desc: 'ERC-4337 entry point', address: '0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108' },
+  { name: 'Safe Singleton Factory', desc: 'Deterministic deployment for Safe', address: '0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7' },
+  { name: 'Create2Deployer', desc: 'CREATE2 deployments', address: '0x13b0D85CcB8bf860b6b79AF3029fCA081AE9beF2' },
+  { name: 'WKASH', desc: 'Wrapped KASH (ERC-20)', address: '0x34Ab8285C63b876717C2c56151700D02623559bE' },
+  { name: 'Compliance precompile', desc: '', descCode: ['isVerified', 'isFrozen'], address: '0x0000000000000000000000000000000000000900' },
+];
+
 // The `faucet` repo's service. Set at build time; unset = the form explains
 // that the faucet is not open yet. The faucet must list this site's origin in
 // its ALLOWED_ORIGINS for the cross-origin POST to be accepted.

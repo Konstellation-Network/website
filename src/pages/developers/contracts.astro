@@ -1,0 +1,61 @@
+---
+import Base from '../../layouts/Base.astro';
+import DevPage from '../../components/DevPage.astro';
+import CopyButton from '../../components/CopyButton.astro';
+import { canonicalContracts } from '../../data/site';
+---
+<Base title="Contracts — Konstellation" description="Standard contracts at their canonical addresses, and the compliance precompile.">
+  <DevPage title="Contracts" intro="Standard contracts at their canonical addresses, and the compliance precompile." span={8}>
+    <div class="wrap">
+      <ul class="list">
+        {canonicalContracts.map((c) => (
+          <li class="item">
+            <div class="who">
+              <span class="name">{c.name}</span>
+              <span class="desc">
+                {c.descCode
+                  ? c.descCode.map((fn, i) => <>{i > 0 && ', '}<span class="tbd">{fn}</span></>)
+                  : c.desc}
+              </span>
+            </div>
+            <span class="mono addr">{c.address}</span>
+            <div class="act"><CopyButton value={c.address} label={`${c.name} address`} /></div>
+          </li>
+        ))}
+      </ul>
+      <p class="note">The same addresses apply on devnet, testnet and mainnet. Always confirm an address on the explorer before sending value.</p>
+    </div>
+  </DevPage>
+</Base>
+
+<style>
+  .wrap { display: flex; flex-direction: column; gap: 24px; }
+  .list { border-top: 1px solid var(--fg); border-bottom: 1px solid var(--line); }
+  .item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'who who' 'addr act';
+    column-gap: 12px;
+    row-gap: 10px;
+    align-items: center;
+    padding: 16px 0;
+    transition: background-color 150ms;
+  }
+  .item + .item { border-top: 1px solid var(--line); }
+  .who { grid-area: who; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .name { font-size: 16px; font-weight: 500; }
+  .desc { font-size: 14px; line-height: 20px; color: var(--muted); }
+  .addr { grid-area: addr; font-size: 13px; line-height: 20px; overflow-wrap: anywhere; }
+  .act { grid-area: act; display: flex; justify-content: flex-end; }
+
+  @media (min-width: 900px) {
+    .item {
+      grid-template-columns: 260px minmax(0, 1fr) 96px;
+      grid-template-areas: 'who addr act';
+      column-gap: 24px;
+      min-height: 76px;
+    }
+    .item:hover { background: var(--hover); }
+    .addr { font-size: 14.5px; }
+  }
+</style>
