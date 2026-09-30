@@ -1,0 +1,74 @@
+---
+// Label / value / Copy rows (network settings, endpoints). A `null` value is
+// unpublished: it shows [TBD] and gets no Copy button.
+export type Row = { label: string; value: string | number | null };
+interface Props {
+  rows: Row[];
+}
+const { rows } = Astro.props;
+---
+<div class="rows">
+  {rows.map((r) => (
+    <div class="row">
+      <span class="label">{r.label}</span>
+      {r.value === null ? <span class="tbd value">[TBD]</span> : <span class="mono value">{r.value}</span>}
+      <div class="act">
+        {r.value !== null && (
+          <button type="button" class="copy" data-copy-text={String(r.value)} aria-label={`Copy ${r.label}`}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><rect x="4.5" y="4.5" width="8" height="8" rx="1" /><path d="M9.5 2.5V1.5H1.5v8h1" /></svg>
+            <span data-copy-label aria-live="polite">Copy</span>
+          </button>
+        )}
+      </div>
+    </div>
+  ))}
+</div>
+
+<style>
+  .rows { border-top: 1px solid var(--fg); border-bottom: 1px solid var(--line); }
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'label act' 'value act';
+    column-gap: 12px;
+    row-gap: 4px;
+    align-items: center;
+    padding: 14px 0;
+  }
+  .row + .row { border-top: 1px solid var(--line); }
+  .label { grid-area: label; font-size: 13px; color: var(--muted); }
+  .value { grid-area: value; font-size: 13px; overflow-wrap: anywhere; }
+  .value.tbd { font-size: 0.88em; }
+  .act { grid-area: act; display: flex; justify-content: flex-end; }
+
+  .copy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 84px;
+    height: 36px;
+    padding: 0 12px;
+    background: var(--bg);
+    color: var(--fg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color 150ms;
+  }
+  .copy:hover { border-color: var(--fg); }
+
+  @media (min-width: 900px) {
+    .row {
+      grid-template-columns: 200px minmax(0, 1fr) 96px;
+      grid-template-areas: 'label value act';
+      column-gap: 24px;
+      min-height: 64px;
+    }
+    .label { font-size: 15px; }
+    .value { font-size: 15px; }
+    .value.tbd { font-size: 13.2px; }
+  }
+</style>
