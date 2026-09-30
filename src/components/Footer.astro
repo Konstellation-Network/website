@@ -1,0 +1,61 @@
+---
+import Logo from './Logo.astro';
+import Mark from './Mark.astro';
+import { footerColumns } from '../data/site';
+---
+<footer class="site-footer">
+  <div class="container inner">
+    <div class="top">
+      <div class="brand"><Logo /></div>
+      <div class="cols">
+        {footerColumns.map((col) => (
+          <div class="col">
+            <h2 class="col-heading">{col.heading}</h2>
+            <ul>
+              {col.links.map((l) => <li><a href={l.href} class="text-link">{l.label}</a></li>)}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div class="bottom">
+      <div class="legal">
+        <span>© 2026 <span class="tbd">[TBD]</span> Konstellation Foundation</span>
+        <span>Konstellation provides compliance controls, not legal compliance.</span>
+      </div>
+      <Mark size={240} label="Konstellation" class="footer-mark" />
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer { border-top: 1px solid var(--line); background: var(--bg); }
+  .inner { padding-top: 64px; padding-bottom: 32px; display: flex; flex-direction: column; gap: 48px; }
+  .top { display: flex; flex-direction: column; gap: 48px; }
+  .cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; row-gap: 40px; }
+  .col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .col ul { display: flex; flex-direction: column; gap: 10px; }
+  .col-heading {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+  .col a { color: var(--fg); font-size: 15px; line-height: 22px; }
+  .bottom { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
+  .legal { display: flex; flex-direction: column; gap: 6px; font-size: 13px; line-height: 20px; color: var(--muted); }
+  .bottom :global(.footer-mark) { width: 96px; height: 96px; color: var(--fg); }
+
+  @media (min-width: 900px) {
+    .inner { padding-top: 96px; padding-bottom: 48px; gap: 64px; }
+    .top {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 24px;
+    }
+    .brand { grid-column: 1 / span 3; }
+    .cols { grid-column: 4 / span 9; grid-template-columns: repeat(5, minmax(0, 1fr)); column-gap: 24px; }
+    .bottom :global(.footer-mark) { width: clamp(160px, 16.7vw, 240px); height: auto; aspect-ratio: 1; }
+  }
+</style>

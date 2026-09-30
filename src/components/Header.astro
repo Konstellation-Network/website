@@ -1,0 +1,334 @@
+---
+import Logo from './Logo.astro';
+import { routes, developerMenu } from '../data/site';
+
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const current = (href: string) => (href !== '#' && (path === href || path.startsWith(href + '/')) ? 'page' : undefined);
+const inDevelopers = path.startsWith(routes.developers);
+
+const primary = [
+  { label: 'Solutions', href: routes.tokenization },
+  { label: 'Compliance', href: routes.compliance },
+  { label: 'Security', href: routes.security },
+];
+---
+<header class="site-header">
+  <div class="container bar">
+    <Logo />
+
+    <nav class="desk-nav" aria-label="Main">
+      {primary.map((l) => <a href={l.href} class="nav-link" aria-current={current(l.href)}>{l.label}</a>)}
+      <div class="dd" data-dropdown>
+        <button
+          type="button"
+          class="nav-link dd-trigger"
+          id="dev-trigger"
+          aria-expanded="false"
+          aria-controls="dev-menu"
+          data-current={inDevelopers ? 'true' : undefined}
+        >
+          Developers
+          <svg class="chev" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1.5 3.5 5 7l3.5-3.5" /></svg>
+        </button>
+        <div id="dev-menu" class="dd-panel" role="group" aria-label="Developers" hidden>
+          <div class="dd-cols">
+            {developerMenu.map((group) => (
+              <div class="menu-group">
+                <h3 class="menu-heading">{group.heading}</h3>
+                <ul>
+                  {group.items.map((item) => (
+                    <li>
+                      <a
+                        href={item.href}
+                        class="menu-item"
+                        target={item.external ? '_blank' : undefined}
+                        rel={item.external ? 'noopener' : undefined}
+                        aria-label={item.external ? `${item.label} (opens in a new tab)` : undefined}
+                      >
+                        <span class="mi-title">
+                          {item.dot && <span class="dot" aria-hidden="true" />}
+                          {item.label}
+                          {item.external && (
+                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 2h6v6M10 2 2 10" /></svg>
+                          )}
+                        </span>
+                        <span class="mi-desc">{item.desc}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <div class="dd-foot">
+            <a href={routes.developers} class="link overview">
+              Developers overview
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 7h11M8 3l4 4-4 4" /></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+      <a href={routes.network} class="nav-link" aria-current={current(routes.network)}>Network</a>
+    </nav>
+
+    <div class="actions">
+      <button type="button" class="icon-btn" data-theme-toggle aria-label="Switch to dark mode" title="Switch to dark mode">
+        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+          <circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="1.5" />
+          <path d="M10 1a9 9 0 0 0 0 18z" fill="currentColor" />
+        </svg>
+      </button>
+      <a href={routes.contact} class="text-link desk-only contact">Contact</a>
+      <a href={routes.quickstart} class="btn btn--primary desk-only">Start building</a>
+      <button
+        type="button"
+        class="icon-btn mob-only menu-btn"
+        id="m-trigger"
+        aria-label="Open menu"
+        aria-expanded="false"
+        aria-controls="m-menu"
+      >
+        <svg class="i-open" width="22" height="12" viewBox="0 0 22 12" aria-hidden="true" stroke="currentColor" stroke-width="1.5"><path d="M0 1h22M0 11h22" /></svg>
+        <svg class="i-close" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" stroke="currentColor" stroke-width="1.5"><path d="M2 2l14 14M16 2 2 16" /></svg>
+      </button>
+    </div>
+  </div>
+
+  <nav id="m-menu" class="drawer" aria-label="Main" hidden>
+    <div class="container drawer-inner">
+      <ul class="m-list">
+        {primary.map((l) => <li><a href={l.href} class="m-link" aria-current={current(l.href)}>{l.label}</a></li>)}
+        <li>
+          <button type="button" class="m-link m-dev-trigger" aria-expanded="false" aria-controls="m-dev">
+            Developers
+            <svg class="chev" width="14" height="14" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1.5 3.5 5 7l3.5-3.5" /></svg>
+          </button>
+          <div id="m-dev" class="m-dev" hidden>
+            {developerMenu.map((group) => (
+              <div class="menu-group">
+                <h3 class="menu-heading">{group.heading}</h3>
+                <ul>
+                  {group.items.map((item) => (
+                    <li>
+                      <a
+                        href={item.href}
+                        class="menu-item"
+                        target={item.external ? '_blank' : undefined}
+                        rel={item.external ? 'noopener' : undefined}
+                        aria-label={item.external ? `${item.label} (opens in a new tab)` : undefined}
+                      >
+                        <span class="mi-title">
+                          {item.dot && <span class="dot" aria-hidden="true" />}
+                          {item.label}
+                          {item.external && (
+                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 2h6v6M10 2 2 10" /></svg>
+                          )}
+                        </span>
+                        <span class="mi-desc">{item.desc}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+            <a href={routes.developers} class="link overview">
+              Developers overview
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 7h11M8 3l4 4-4 4" /></svg>
+            </a>
+          </div>
+        </li>
+        <li><a href={routes.network} class="m-link" aria-current={current(routes.network)}>Network</a></li>
+      </ul>
+      <a href={routes.contact} class="m-contact">Contact</a>
+      <a href={routes.quickstart} class="btn btn--primary">Start building</a>
+    </div>
+  </nav>
+</header>
+
+<style>
+  .site-header {
+    position: relative;
+    z-index: 30;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .bar {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .desk-nav, .desk-only { display: none; }
+
+  .actions { display: flex; align-items: center; gap: 4px; }
+
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--fg);
+    cursor: pointer;
+    transition: background-color 150ms;
+  }
+  .icon-btn:hover { background: var(--hover); }
+
+  .menu-btn { margin-right: -10px; border-radius: 0; }
+  .menu-btn:hover { background: transparent; }
+  .menu-btn .i-close { display: none; }
+  .menu-btn[aria-expanded='true'] .i-open { display: none; }
+  .menu-btn[aria-expanded='true'] .i-close { display: block; }
+
+  .chev { flex-shrink: 0; transition: transform 150ms; }
+  [aria-expanded='true'] > .chev { transform: rotate(180deg); }
+
+  /* ----- Desktop ----- */
+  @media (min-width: 1200px) {
+    .bar {
+      height: 80px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      column-gap: 24px;
+    }
+    .desk-nav {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+      justify-content: center;
+    }
+    .desk-only { display: inline-flex; }
+    .mob-only, .drawer { display: none !important; }
+    .actions { justify-content: flex-end; gap: 16px; }
+    .contact { font-size: 15px; color: var(--fg); margin-right: 4px; }
+  }
+
+  .nav-link {
+    color: var(--muted);
+    font-size: 15px;
+    text-decoration: none;
+    transition: color 150ms;
+  }
+  .nav-link:hover, .nav-link[aria-current='page'], .nav-link[data-current], .dd-trigger[aria-expanded='true'] {
+    color: var(--fg);
+  }
+
+  .dd {
+    position: relative;
+    display: flex;
+    align-items: center;
+    /* Extend the hover area down to the panel so moving onto it doesn't close it. */
+    padding: 26px 0;
+    margin: -26px 0;
+  }
+  .dd-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-family: var(--sans);
+  }
+  .dd-panel {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 40;
+    width: 640px;
+    padding: 32px 36px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    text-align: left;
+  }
+  .dd-panel[hidden] { display: none; }
+  .dd-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 40px; }
+  .dd-foot { border-top: 1px solid var(--line); padding-top: 20px; display: flex; }
+
+  .menu-group { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .menu-group ul { display: flex; flex-direction: column; gap: 2px; }
+  .menu-heading {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+  .menu-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    margin: 0 -12px;
+    border-radius: var(--radius);
+    color: var(--fg);
+    text-decoration: none;
+    transition: background-color 150ms;
+  }
+  .menu-item:hover { background: var(--hover); }
+  .mi-title { display: flex; align-items: center; gap: 8px; font-size: 16px; line-height: 22px; font-weight: 500; }
+  .mi-desc { font-size: 14px; line-height: 20px; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--fg); flex-shrink: 0; }
+  .overview { font-size: 15px; }
+
+  /* ----- Mobile drawer ----- */
+  .drawer {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    z-index: 40;
+    height: calc(100dvh - 64px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  .drawer[hidden] { display: none; }
+  .drawer-inner {
+    padding-top: 8px;
+    padding-bottom: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .m-list > li { border-bottom: 1px solid var(--line); }
+  .m-link {
+    width: 100%;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    color: var(--fg);
+    text-decoration: none;
+    font-family: var(--sans);
+    font-size: 24px;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    text-align: left;
+  }
+  .m-dev { padding: 4px 0 20px; display: flex; flex-direction: column; gap: 20px; }
+  .m-dev[hidden] { display: none; }
+  .m-dev .menu-group ul { gap: 0; }
+  .m-dev .menu-item { padding: 10px 0; margin: 0; }
+  .m-dev .menu-item:hover { background: transparent; }
+  .m-contact { font-size: 17px; color: var(--fg); text-decoration: none; padding: 4px 0; align-self: flex-start; }
+  .drawer .btn { width: 100%; }
+</style>

@@ -1,0 +1,154 @@
+---
+// "Freeze list checked before execution" diagram from the Home page.
+// Two drawings from the design: horizontal (1152×344) on wide screens and
+// vertical (350×556) on narrow ones. Both are SVG so they scale and follow
+// the theme tokens.
+
+// Arrowhead as a filled triangle, tip at (x, y), pointing right or down.
+const headRight = (x: number, y: number) => `${x - 4.8},${y - 3} ${x + 1.2},${y} ${x - 4.8},${y + 3}`;
+const headDown = (x: number, y: number) => `${x - 3},${y - 4.8} ${x},${y + 1.2} ${x + 3},${y - 4.8}`;
+
+const wideArrows = [
+  { x1: 232, x2: 318, y: 96 },
+  { x1: 448, x2: 598, y: 96 },
+  { x1: 800, x2: 870, y: 96 },
+  { x1: 232, x2: 318, y: 256 },
+  { x1: 448, x2: 596, y: 256, accent: true },
+];
+const narrowArrows = [
+  { x: 85, y1: 80, y2: 126 },
+  { x: 85, y1: 240, y2: 302 },
+  { x: 85, y1: 376, y2: 422 },
+  { x: 265, y1: 80, y2: 126 },
+  { x: 265, y1: 240, y2: 298, accent: true },
+];
+const label = 'Two transfers pass through the protocol freeze-list check. The first passes, executes and settles, final in about two seconds. The second is from an address on the freeze list and is rejected before execution, with no state changes.';
+---
+<figure class="figure" data-reveal>
+  <svg class="diagram wide" viewBox="0 0 1152 344" role="img" aria-label={label}>
+    {wideArrows.map((a) => (
+      <g class={a.accent ? 'acc-stroke' : 'ink-stroke'}>
+        <line x1={a.x1} y1={a.y} x2={a.x2} y2={a.y} />
+        <polygon points={headRight(a.x2, a.y)} />
+      </g>
+    ))}
+    <rect class="acc-fill" x="598" y="212" width="4" height="88" />
+
+    <rect class="box" x="0.5" y="52.5" width="231" height="87" rx="4" />
+    <text x="116" y="92" text-anchor="middle"><tspan class="t strong">Transfer</tspan><tspan class="m mono-s" x="116" dy="21">from 0x7a1…c09e</tspan></text>
+    <rect class="box" x="0.5" y="212.5" width="231" height="87" rx="4" />
+    <text x="116" y="252" text-anchor="middle"><tspan class="t strong">Transfer</tspan><tspan class="m mono-s" x="116" dy="21">from 0x3f9…b21a</tspan></text>
+
+    <circle class="box" cx="384" cy="96" r="63.5" />
+    <text x="384" y="92" text-anchor="middle" class="s14"><tspan class="t">Protocol check</tspan><tspan class="m" x="384" dy="19">freeze list</tspan></text>
+    <circle class="box" cx="384" cy="256" r="63.5" />
+    <text x="384" y="252" text-anchor="middle" class="s14"><tspan class="t">Protocol check</tspan><tspan class="m" x="384" dy="19">freeze list</tspan></text>
+
+    <text x="524" y="80" text-anchor="middle" class="m mono-12">passes</text>
+    <text x="524" y="240" text-anchor="middle" class="acc mono-12">on freeze list</text>
+
+    <rect class="box" x="600.5" y="52.5" width="199" height="87" rx="4" />
+    <text x="700" y="92" text-anchor="middle"><tspan class="t strong">Execute</tspan><tspan class="m" x="700" dy="21">contract logic runs</tspan></text>
+
+    <circle class="solid" cx="944" cy="96" r="72" />
+    <text x="944" y="92" text-anchor="middle" class="inv"><tspan class="strong">Settled</tspan><tspan x="944" dy="19">final in ~2 s</tspan></text>
+
+    <text x="1032" y="79" class="m"><tspan>Cannot be</tspan><tspan x="1032" dy="22">reversed by a</tspan><tspan x="1032" dy="22">reorganisation.</tspan></text>
+
+    <text x="632" y="250"><tspan class="t strong">Rejected before execution.</tspan><tspan class="m" x="632" dy="22">No state changes. Native KASH included.</tspan></text>
+  </svg>
+
+  <svg class="diagram narrow" viewBox="0 0 350 556" role="img" aria-label={label}>
+    {narrowArrows.map((a) => (
+      <g class={a.accent ? 'acc-stroke' : 'ink-stroke'}>
+        <line x1={a.x} y1={a.y1} x2={a.x} y2={a.y2} />
+        <polygon points={headDown(a.x, a.y2)} />
+      </g>
+    ))}
+    <rect class="acc-fill" x="215" y="300" width="100" height="4" />
+
+    <rect class="box" x="5.5" y="0.5" width="159" height="79" rx="4" />
+    <text x="85" y="36" text-anchor="middle" class="s14"><tspan class="t strong">Transfer</tspan><tspan class="m mono-s14" x="85" dy="21">0x7a1…c09e</tspan></text>
+    <rect class="box" x="185.5" y="0.5" width="159" height="79" rx="4" />
+    <text x="265" y="36" text-anchor="middle" class="s14"><tspan class="t strong">Transfer</tspan><tspan class="m mono-s14" x="265" dy="21">0x3f9…b21a</tspan></text>
+
+    <circle class="box" cx="85" cy="184" r="55.5" />
+    <text x="85" y="180" text-anchor="middle" class="s13"><tspan class="t">Protocol check</tspan><tspan class="m" x="85" dy="19">freeze list</tspan></text>
+    <circle class="box" cx="265" cy="184" r="55.5" />
+    <text x="265" y="180" text-anchor="middle" class="s13"><tspan class="t">Protocol check</tspan><tspan class="m" x="265" dy="19">freeze list</tspan></text>
+
+    <text x="97" y="275" class="m mono-12">passes</text>
+    <text x="277" y="273" class="acc mono-12">frozen</text>
+
+    <rect class="box" x="5.5" y="304.5" width="159" height="71" rx="4" />
+    <text x="85" y="336" text-anchor="middle" class="s14"><tspan class="t strong">Execute</tspan><tspan class="m" x="85" dy="21">logic runs</tspan></text>
+
+    <circle class="solid" cx="85" cy="488" r="64" />
+    <text x="85" y="484" text-anchor="middle" class="inv s14"><tspan class="strong">Settled</tspan><tspan x="85" dy="19">final in ~2 s</tspan></text>
+
+    <text x="185" y="335" class="s14"><tspan class="t strong">Rejected before</tspan><tspan x="185" dy="21"><tspan class="t strong">execution.</tspan><tspan class="m"> No state</tspan></tspan><tspan class="m" x="185" dy="21">changes.</tspan></text>
+  </svg>
+
+  <figcaption>
+    <span class="wide-only">The freeze list is checked by the chain before any transaction executes. Contracts may additionally require the verification list.</span>
+    <span class="narrow-only">The freeze list is checked by the chain before any transaction executes.</span>
+  </figcaption>
+  <div class="notch" aria-hidden="true"></div>
+</figure>
+
+<style>
+  .figure {
+    position: relative;
+    overflow: hidden;
+    background: var(--alt);
+    border-radius: var(--radius);
+    padding: 32px 0;
+  }
+  .diagram { width: 100%; height: auto; font-family: var(--sans); font-size: 15px; }
+  .narrow { max-width: 350px; margin: 0 auto; }
+  .wide, .wide-only { display: none; }
+
+  .box { fill: var(--bg); stroke: var(--fg); stroke-width: 1; }
+  .solid { fill: var(--fg); }
+  .ink-stroke line { stroke: var(--fg); stroke-width: 1.5; stroke-linecap: round; }
+  .ink-stroke polygon { fill: var(--fg); }
+  .acc-stroke line { stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; }
+  .acc-stroke polygon, .acc-fill { fill: var(--accent); }
+
+  .t { fill: var(--fg); }
+  .m { fill: var(--muted); }
+  .acc { fill: var(--accent-text); }
+  .inv { fill: var(--bg); }
+  .strong { font-weight: 500; }
+  .s13 { font-size: 13px; }
+  .s14 { font-size: 14px; }
+  .mono-12 { font-family: var(--mono); font-size: 12px; }
+  .mono-s { font-family: var(--mono); font-size: 13.2px; }
+  .mono-s14 { font-family: var(--mono); font-size: 12.3px; }
+
+  figcaption {
+    margin: 24px 20px 0;
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--muted);
+  }
+
+  .notch {
+    position: absolute;
+    top: -28px;
+    right: -28px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--bg);
+  }
+
+  @media (min-width: 1200px) {
+    .figure { padding: 72px 64px 56px; }
+    .wide { display: block; }
+    .wide-only { display: inline; }
+    .narrow, .narrow-only { display: none; }
+    figcaption { margin: 40px 0 0; font-size: 14px; }
+    .notch { top: -44px; right: -44px; width: 88px; height: 88px; }
+  }
+</style>

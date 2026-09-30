@@ -1,0 +1,25 @@
+---
+// The Konstellation mark: a ring with two bites. Fills with currentColor.
+interface Props {
+  size: number;
+  label?: string;
+  class?: string;
+}
+const { size, label, class: className } = Astro.props;
+---
+<svg
+  class={className}
+  width={size}
+  height={size}
+  viewBox="0 0 210 210"
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+  style="flex-shrink: 0"
+>
+  <path
+    fill-rule="evenodd"
+    fill="currentColor"
+    d="M67.49 6.93A105 105 0 0 1 202.75 143.34A47 47 0 0 0 138.28 204.59A105 105 0 0 1 5.55 71.32A47 47 0 0 0 67.49 6.93ZM105 58.3A46.7 46.7 0 1 0 105 151.7A46.7 46.7 0 1 0 105 58.3Z"
+  />
+</svg>
