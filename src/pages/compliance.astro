@@ -1,0 +1,294 @@
+---
+import Base from '../layouts/Base.astro';
+import Mark from '../components/Mark.astro';
+import CodePanel from '../components/CodePanel.astro';
+import KeyValueRows from '../components/KeyValueRows.astro';
+import ChangeTimeline from '../components/compliance/ChangeTimeline.astro';
+import { routes } from '../data/site';
+
+// Facts on this page follow ENGINEERING §10 and §11 D6 and the konstellation
+// repo's x/compliance (ICompliance.sol, types/params.go). Keep them in step.
+const PRECOMPILE = '0x0000000000000000000000000000000000000900';
+
+const toc = [
+  { id: 'lists', label: 'The two lists' },
+  { id: 'control', label: 'Who controls them' },
+  { id: 'contracts', label: 'What contracts can do' },
+  { id: 'limits', label: 'Limits, stated honestly' },
+];
+
+const rows = ['Purpose', 'Checked by', 'Effect', 'Scope'];
+const lists = [
+  {
+    name: 'Verification list',
+    cells: [
+      'Records addresses that have been verified.',
+      'Contracts that choose to consult it.',
+      'None unless a contract requires it. Verification is never required to transact.',
+      'Opt-in, per contract.',
+    ],
+  },
+  {
+    name: 'Freeze list',
+    cells: [
+      'Records addresses that cannot transact.',
+      'The chain, on every transaction, before execution.',
+      'Transactions involving a listed address, as sender or recipient, are rejected before execution, native KASH included.',
+      'Chain-wide.',
+    ],
+  },
+];
+
+const control = [
+  { k: 'Authority', v: 'A foundation multisig.' },
+  { k: 'Routine changes', v: 'Subject to a 24-hour on-chain timelock.' },
+  { k: 'Emergency freezes', v: 'Take effect at once, and expire after 24 hours unless ratified.' },
+  { k: 'Governance', v: 'Can override any entry or replace the authority.' },
+  { k: 'Audit trail', v: 'Every action is an on-chain event.' },
+];
+
+const code = `<span class="kw">interface</span> ICompliance {
+    <span class="kw">function</span> isVerified(address account) <span class="kw">external view returns</span> (bool);
+    <span class="kw">function</span> isFrozen(address account) <span class="kw">external view returns</span> (bool);
+}
+
+ICompliance <span class="kw">constant</span> COMPLIANCE =
+    ICompliance(${PRECOMPILE});
+
+<span class="cm">// in your transfer hook</span>
+require(COMPLIANCE.isVerified(to), <span class="str">"recipient not verified"</span>);`;
+---
+<Base
+  title="Compliance — Konstellation"
+  description="How the verification and freeze lists work, who controls them, and what they cannot do. Written for compliance officers and counsel."
+>
+  <section class="hero" aria-label="Introduction">
+    <div class="container hero-grid">
+      <div class="hero-text">
+        <div class="eyebrow">Compliance</div>
+        <h1>Two lists, enforced by the protocol.</h1>
+        <p class="lead hero-lead">How the verification and freeze lists work, who controls them, and what they cannot do. Written for compliance officers and counsel.</p>
+        <div class="meta">Legal review <span class="tbd">[TBD]</span> · Last updated <span class="tbd">[TBD]</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section controls" aria-label="Compliance controls">
+    <div class="container ctl-grid">
+      <nav aria-label="On this page" class="toc">
+        <div class="eyebrow">On this page</div>
+        <ol>
+          {toc.map((t, i) => (
+            <li>
+              <a href={`#${t.id}`} class="text-link" data-toc={t.id}>
+                <span class="tbd">{String(i + 1).padStart(2, '0')}</span>{t.label}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+
+      <div class="content">
+        <section id="lists" aria-labelledby="lists-h" class="block">
+          <div class="block-head"><span class="tbd num">01</span><h2 id="lists-h">The two lists</h2></div>
+          <p class="lead">Konstellation keeps two lists on-chain. They do different jobs, and only one of them is enforced by the chain.</p>
+
+          <table class="compare">
+            <caption>The verification list and the freeze list compared</caption>
+            <thead>
+              <tr>
+                <td></td>
+                {lists.map((l) => <th scope="col">{l.name}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr>
+                  <th scope="row">{r}</th>
+                  {lists.map((l) => <td>{l.cells[i]}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div class="compare-m">
+            {lists.map((l) => (
+              <div class="list-card">
+                <h3>{l.name}</h3>
+                <dl>
+                  {rows.map((r, i) => (
+                    <div><dt>{r}</dt><dd>{l.cells[i]}</dd></div>
+                  ))}
+                </dl>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section id="control" aria-labelledby="control-h" class="block">
+          <div class="block-head"><span class="tbd num">02</span><h2 id="control-h">Who controls them</h2></div>
+          <dl class="kv">
+            {control.map((c) => <div><dt>{c.k}</dt><dd>{c.v}</dd></div>)}
+          </dl>
+          <ChangeTimeline />
+        </section>
+
+        <section id="contracts" aria-labelledby="contracts-h" class="block">
+          <div class="block-head"><span class="tbd num">03</span><h2 id="contracts-h">What contracts can do</h2></div>
+          <p class="lead">Any contract can call <span class="tbd">isVerified(address)</span> and <span class="tbd">isFrozen(address)</span> through the compliance precompile. Whether to require verification is the contract author’s decision.</p>
+          <KeyValueRows rows={[{ label: 'Compliance precompile', value: PRECOMPILE }]} />
+          <CodePanel id="code-compliance" filename="ComplianceCheck.sol" html={code} />
+        </section>
+
+        <section id="limits" aria-labelledby="limits-h" class="block">
+          <div class="block-head"><span class="tbd num">04</span><h2 id="limits-h">Limits, stated honestly</h2></div>
+          <p class="lead strong">The chain can stop a frozen address from moving native KASH. Token balances held inside contracts follow each token’s own rules.</p>
+          <p class="body">A freeze does not move, seize or reverse any balance. A frozen address can still be credited a few protocol payouts it is already owed, such as returned deposits or completed unbonding, but cannot move them. Issuers that need token-level controls, such as forced transfers or recovery, implement them in the token contract, for example with ERC-3643.</p>
+        </section>
+
+        <div class="disclaimer">
+          <p class="disc-main">Konstellation provides controls, not legal compliance. Issuers remain responsible for their obligations.</p>
+          <p class="note">Legal review of this page: <span class="tbd">[TBD]</span></p>
+          <div class="notch" aria-hidden="true"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta inverted" aria-labelledby="cta-h">
+    <div class="container cta-grid">
+      <div class="cta-text">
+        <h2 id="cta-h" class="h2" data-reveal>Questions from your compliance team?</h2>
+        <p class="lead cta-lead">We can walk counsel and compliance officers through the controls in detail.</p>
+        <div class="btn-row">
+          <a href={routes.contact} class="btn btn--primary">Talk to us</a>
+        </div>
+      </div>
+      <div class="cta-mark"><Mark size={200} class="cta-mark-svg" /></div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  // Highlight the "On this page" entry for the section being read.
+  const links = new Map<string, HTMLElement>();
+  document.querySelectorAll<HTMLElement>('[data-toc]').forEach((a) => links.set(a.dataset.toc!, a));
+  const setCurrent = (id: string) =>
+    links.forEach((a, key) => (key === id ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
+  const first = links.keys().next().value;
+  if (first) setCurrent(first);
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => { if (e.isIntersecting) setCurrent(e.target.id); }),
+      { rootMargin: '-20% 0px -70% 0px' },
+    );
+    links.forEach((_, id) => { const el = document.getElementById(id); if (el) io.observe(el); });
+  }
+</script>
+
+<style>
+  /* ----- Hero ----- */
+  .hero { padding-block: 56px; }
+  .hero-text { display: flex; flex-direction: column; gap: 24px; }
+  h1 { font-size: 42px; line-height: 1.06; letter-spacing: -0.03em; font-weight: 400; text-wrap: balance; }
+  .hero-lead { max-width: 680px; }
+  .meta { font-family: var(--mono); font-size: 13px; line-height: 20px; color: var(--muted); }
+
+  /* ----- Controls ----- */
+  .controls { border-top: 1px solid var(--line); }
+  .toc { display: flex; flex-direction: column; gap: 16px; border-top: 1px solid var(--fg); padding-top: 16px; }
+  .toc ol { display: flex; flex-direction: column; gap: 12px; }
+  .toc a { display: flex; gap: 12px; font-size: 15px; line-height: 22px; color: var(--muted); }
+  .toc a:hover, .toc a[aria-current] { color: var(--fg); }
+  .content { margin-top: 56px; min-width: 0; }
+
+  .block { display: flex; flex-direction: column; gap: 24px; scroll-margin-top: 24px; }
+  .block + .block { padding-top: 64px; }
+  .block-head { display: flex; gap: 16px; align-items: baseline; }
+  .block-head .num { color: var(--muted); }
+  .block h2 { font-size: 30px; line-height: 1.1; letter-spacing: -0.025em; font-weight: 400; }
+  .lead.strong { color: var(--fg); }
+  .body { font-size: 16px; line-height: 25px; color: var(--muted); text-wrap: pretty; }
+
+  .compare { display: none; }
+  .compare-m { display: flex; flex-direction: column; gap: 32px; }
+  .list-card { border-top: 1px solid var(--fg); padding-top: 16px; }
+  .list-card h3 { font-size: 22px; line-height: 1.25; letter-spacing: -0.01em; font-weight: 500; }
+  .list-card dl { margin-top: 16px; }
+  .list-card dl > div, .kv > div { border-top: 1px solid var(--line); padding: 12px 0; display: flex; flex-direction: column; gap: 4px; }
+  .list-card dt, .kv dt { font-size: 13px; color: var(--muted); }
+  .list-card dd { font-size: 16px; line-height: 24px; }
+  .kv { border-bottom: 1px solid var(--line); }
+  .kv dd { font-size: 16px; line-height: 26px; }
+
+  .disclaimer {
+    position: relative;
+    overflow: hidden;
+    margin-top: 64px;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border: 1px solid var(--fg);
+    border-radius: var(--radius);
+  }
+  .disc-main { font-size: 20px; line-height: 30px; letter-spacing: -0.01em; max-width: 640px; text-wrap: pretty; }
+  .notch {
+    position: absolute;
+    top: -28px;
+    right: -28px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+  }
+
+  /* ----- CTA ----- */
+  .cta { padding-block: 80px; }
+  .cta-text { display: flex; flex-direction: column; gap: 32px; }
+  .cta-lead { color: color-mix(in srgb, var(--bg) 65%, var(--fg)); max-width: 560px; }
+  .cta-mark { display: flex; justify-content: flex-end; margin-top: 48px; }
+  .cta-mark :global(.cta-mark-svg) { width: 112px; height: 112px; }
+
+  @media (min-width: 900px) {
+    .hero { padding-block: 112px; }
+    .hero-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+    .hero-text { grid-column: 1 / span 9; gap: 28px; }
+    h1 { font-size: clamp(56px, 5.56vw, 80px); line-height: 1.02; letter-spacing: -0.035em; }
+
+    .ctl-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; align-items: start; }
+    .toc { grid-column: 1 / span 3; position: sticky; top: 24px; }
+    .content { grid-column: 5 / span 8; margin-top: 0; }
+
+    .block { gap: 32px; }
+    .block + .block { padding-top: 112px; }
+    .block h2 { font-size: clamp(36px, 3.06vw, 44px); }
+    .body { font-size: 17px; line-height: 27px; }
+
+    .compare-m { display: none; }
+    .compare { display: table; width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 17px; line-height: 26px; }
+    .compare caption { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .compare thead td { width: 150px; border-bottom: 1px solid var(--fg); }
+    .compare thead th { text-align: left; font-size: 22px; font-weight: 500; padding: 0 24px 16px 0; border-bottom: 1px solid var(--fg); }
+    .compare thead th:last-child { padding-right: 0; }
+    .compare tbody th { text-align: left; font-weight: 400; color: var(--muted); padding: 18px 24px 18px 0; border-top: 1px solid var(--line); vertical-align: top; font-size: 15px; }
+    .compare tbody td { padding: 18px 24px 18px 0; border-top: 1px solid var(--line); vertical-align: top; }
+    .compare tbody td:last-child { padding-right: 0; }
+    .compare tbody tr:first-child > * { border-top: 0; }
+
+    .kv > div { display: grid; grid-template-columns: 200px minmax(0, 1fr); column-gap: 24px; padding: 16px 0; }
+    .kv dt { font-size: 15px; }
+    .kv dd { font-size: 17px; }
+
+    .disclaimer { margin-top: 112px; padding: 40px 48px; }
+    .disc-main { font-size: 24px; line-height: 34px; }
+    .notch { top: -36px; right: -36px; width: 72px; height: 72px; }
+
+    .cta { padding-block: 136px; }
+    .cta-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+    .cta-text { grid-column: 1 / span 8; gap: 36px; }
+    .cta-mark { grid-column: 10 / span 3; margin-top: 0; align-items: center; }
+    .cta-mark :global(.cta-mark-svg) { width: 100%; max-width: 200px; height: auto; aspect-ratio: 1; }
+  }
+</style>

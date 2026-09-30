@@ -1,0 +1,111 @@
+---
+// The two ways a list entry changes: the routine (timelocked) path and the
+// emergency freeze. Built with flex/grid rather than fixed coordinates, so the
+// same markup serves desktop (note beside the rail) and mobile (note below).
+// Timings: x/compliance DefaultTimelock = 24 h; an emergency freeze expires
+// after the timelock unless ratified (ENGINEERING §11 D6, §18 mainnet row).
+type Path = {
+  label: string;
+  span: string;
+  start: { text: string; solid: boolean };
+  end: { text: string; solid: boolean };
+  note: string;
+};
+const paths: Path[] = [
+  {
+    label: 'Routine change',
+    span: '24-hour on-chain timelock',
+    start: { text: 'Change proposed by the multisig', solid: false },
+    end: { text: 'Takes effect', solid: true },
+    note: 'Recorded as an on-chain event.',
+  },
+  {
+    label: 'Emergency freeze',
+    span: '24-hour ratification window',
+    start: { text: 'Takes effect at once', solid: true },
+    end: { text: 'Ratified, or expires', solid: false },
+    note: 'Expires unless ratified.',
+  },
+];
+---
+<figure class="timeline" data-reveal>
+  {paths.map((p) => (
+    <div class="path">
+      <div class="label">{p.label}</div>
+      <div class="track">
+        <div class="rail" aria-hidden="true">
+          <span class:list={['dot', { solid: p.start.solid }]} />
+          <span class="line"><span class="span-label">{p.span}</span></span>
+          <span class:list={['dot', { solid: p.end.solid }]} />
+        </div>
+        <div class="ends">
+          <span>{p.start.text}</span>
+          <span class="end">{p.end.text}</span>
+        </div>
+        <span class="sr">{p.span}.</span>
+      </div>
+      <p class="note">{p.note}</p>
+    </div>
+  ))}
+  <figcaption>Governance can override any entry, on either path, or replace the authority.</figcaption>
+</figure>
+
+<style>
+  .timeline { display: flex; flex-direction: column; gap: 40px; padding-top: 32px; margin-top: 16px; }
+  .path { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 12px; }
+  .label { font-family: var(--mono); font-size: 12px; line-height: 16px; color: var(--muted); }
+  .track { display: flex; flex-direction: column; gap: 10px; }
+  .rail { display: flex; align-items: center; padding-top: 22px; }
+  .dot {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 1px solid var(--fg);
+    background: var(--bg);
+  }
+  .dot.solid { background: var(--fg); }
+  .line { position: relative; flex: 1; height: 1px; background: var(--fg); }
+  .span-label {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--muted);
+  }
+  .ends { display: flex; justify-content: space-between; gap: 16px; font-size: 14px; line-height: 20px; color: var(--fg); }
+  .ends span { max-width: 50%; }
+  .end { text-align: right; }
+  .note { font-size: 14px; line-height: 20px; color: var(--muted); }
+  figcaption {
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--fg);
+  }
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  @media (min-width: 900px) {
+    .timeline { padding-top: 40px; gap: 44px; }
+    .path {
+      grid-template-columns: minmax(0, 404px) minmax(0, 1fr);
+      column-gap: 48px;
+    }
+    .label { grid-column: 1 / -1; }
+    .track { position: relative; }
+    .note { font-size: 15px; line-height: 22px; padding-top: 23px; }
+    figcaption { max-width: 640px; padding-top: 16px; }
+  }
+</style>
