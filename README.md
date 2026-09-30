@@ -28,3 +28,13 @@ inline script in `src/layouts/Base.astro`. Do not add a
 - `src/scripts/site.ts`: theme toggle, menus, copy buttons, scroll reveal.
 
 Breakpoints: 900px (section layouts), 1200px (desktop header, wide diagram).
+
+## Build-time settings
+
+| Variable | |
+|---|---|
+| `PUBLIC_FAUCET_URL` | origin of the `faucet` service, e.g. `https://faucet.devnet-1.…`. Unset: the Faucet form says the faucet is not open yet. The faucet must list this site's origin in its `ALLOWED_ORIGINS`, or it refuses the POST (403 `forbidden_origin`). |
+| `PUBLIC_EXPLORER_TX_URL` | explorer transaction link, `{hash}` replaced, e.g. `https://explorer…/tx/{hash}`. |
+
+Endpoints, chain IDs and faucet amount/limit live in `src/data/site.ts`;
+anything `null` renders as `[TBD]`.

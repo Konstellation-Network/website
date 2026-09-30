@@ -1,0 +1,296 @@
+---
+import Base from '../../layouts/Base.astro';
+import DevPage from '../../components/DevPage.astro';
+import { faucet } from '../../data/site';
+---
+<Base title="Faucet — Konstellation" description="Free test KASH for devnet-1.">
+  <DevPage title="Faucet" intro="Free test KASH for devnet-1." railOnMobile>
+    <form
+      class="faucet"
+      novalidate
+      data-faucet
+      data-api={faucet.apiUrl ?? ''}
+      data-explorer-tx={faucet.explorerTxUrl ?? ''}
+    >
+      <div class="field">
+        <label for="addr">Wallet address</label>
+        <input
+          id="addr"
+          name="address"
+          class="input mono"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder="0x… or kons1…"
+          aria-describedby="addr-help"
+          required
+        />
+        <span id="addr-help" class="help">An EVM address (0x…) or a Konstellation address (kons1…).</span>
+        <span id="addr-err" class="err" hidden><span class="err-dot" aria-hidden="true"></span>Enter a full 0x… or kons1… address.</span>
+      </div>
+      <div class="field">
+        <label for="net">Network</label>
+        <select id="net" name="network" class="input">
+          <option value="devnet-1" selected>Devnet (devnet-1)</option>
+          <option value="testnet-1" disabled>Testnet (testnet-1) · opens [TBD]</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn--primary">Send test KASH</button>
+
+      <div class="result" aria-live="polite">
+        <div class="status soft" data-state="pending" role="status" hidden>
+          <span class="icon ring" aria-hidden="true"></span>
+          <div class="st-body">
+            <span class="st-title">Sending test KASH</span>
+            <p>To <span class="tbd" data-to></span>. Waiting for the transaction to be included in a block.</p>
+          </div>
+        </div>
+
+        <div class="status strong" data-state="success" role="status" hidden>
+          <span class="icon check" aria-hidden="true">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1.5 5.2 4 7.5 8.5 2.5" /></svg>
+          </span>
+          <div class="st-body grow">
+            <span class="st-title" data-success-title>Sent. The transaction is final.</span>
+            <p><span class="tbd" data-amount></span> KASH to <span class="tbd" data-to></span>.</p>
+            <div class="hash">
+              <span class="hash-label">Transaction hash</span>
+              <span class="mono hash-value" data-hash></span>
+            </div>
+            <a class="link small" data-explorer target="_blank" rel="noopener" hidden>
+              View in explorer
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 2h6v6M10 2 2 10" /></svg>
+            </a>
+            <span class="note" data-explorer-tbd>View in explorer <span class="tbd">[TBD]</span></span>
+          </div>
+        </div>
+
+        <div class="status soft" data-state="limited" role="status" hidden>
+          <span class="icon half" aria-hidden="true"></span>
+          <div class="st-body">
+            <span class="st-title">This address received test KASH recently.</span>
+            <p>Try again in <span class="tbd" data-hours>[TBD]</span> hours. Limits keep the faucet available for everyone.</p>
+          </div>
+        </div>
+
+        <div class="status soft" data-state="error" role="alert" hidden>
+          <span class="icon half" aria-hidden="true"></span>
+          <div class="st-body">
+            <span class="st-title" data-err-title></span>
+            <p data-err-body></p>
+          </div>
+        </div>
+      </div>
+      <div class="notch" aria-hidden="true"></div>
+    </form>
+
+    <dl slot="rail" class="facts">
+      <div>
+        <dt>Amount per request</dt>
+        <dd>{faucet.amountKash ?? <span class="tbd">[TBD]</span>} KASH</dd>
+      </div>
+      <div>
+        <dt>Limit</dt>
+        <dd>One request per address every {faucet.cooldownHours ?? <span class="tbd">[TBD]</span>} hours</dd>
+      </div>
+      <div>
+        <dt>Value</dt>
+        <dd>Test KASH has no monetary value and cannot move to mainnet.</dd>
+      </div>
+    </dl>
+  </DevPage>
+</Base>
+
+<script>
+  // Client for the `faucet` repo's POST /request (see faucet/README.md).
+  const form = document.querySelector<HTMLFormElement>('[data-faucet]');
+  if (form) {
+    const api = form.dataset.api;
+    const explorerTx = form.dataset.explorerTx;
+    const input = form.querySelector<HTMLInputElement>('#addr')!;
+    const err = form.querySelector<HTMLElement>('#addr-err')!;
+    const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    const states = form.querySelectorAll<HTMLElement>('[data-state]');
+    const q = <T extends HTMLElement>(sel: string, root: ParentNode = form) => root.querySelector<T>(sel);
+
+    const ADDRESS = /^(0x[0-9a-fA-F]{40}|kons1[02-9ac-hj-np-z]{38}|KONS1[02-9AC-HJ-NP-Z]{38})$/;
+    const short = (a: string) => (a.length > 14 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a);
+
+    const show = (name: string | null) => states.forEach((s) => (s.hidden = s.dataset.state !== name));
+    const setInvalid = (bad: boolean) => {
+      input.setAttribute('aria-invalid', String(bad));
+      input.setAttribute('aria-describedby', bad ? 'addr-err' : 'addr-help');
+      err.hidden = !bad;
+    };
+    const fail = (title: string, body: string) => {
+      q('[data-err-title]')!.textContent = title;
+      q('[data-err-body]')!.textContent = body;
+      show('error');
+    };
+
+    input.addEventListener('input', () => {
+      if (input.getAttribute('aria-invalid') === 'true' && ADDRESS.test(input.value.trim())) setInvalid(false);
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const address = input.value.trim();
+      if (!ADDRESS.test(address)) {
+        setInvalid(true);
+        show(null);
+        input.focus();
+        return;
+      }
+      setInvalid(false);
+      if (!api) {
+        fail('The faucet is not open yet.', 'It opens with devnet-1. Check back when the network launches.');
+        return;
+      }
+
+      form.querySelectorAll<HTMLElement>('[data-to]').forEach((el) => (el.textContent = short(address)));
+      show('pending');
+      submit.disabled = true;
+      try {
+        const res = await fetch(new URL('/request', api), {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ address }),
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (res.status === 200 || res.status === 202) {
+          const success = q('[data-state="success"]')!;
+          q('[data-success-title]', success)!.textContent = data.confirmed
+            ? 'Sent. The transaction is final.'
+            : 'Sent. Waiting for the block; it will be final in a few seconds.';
+          q('[data-amount]', success)!.textContent = String(data.amountKash ?? '');
+          q('[data-hash]', success)!.textContent = data.txHash ?? '';
+          const link = q<HTMLAnchorElement>('[data-explorer]', success)!;
+          const tbd = q('[data-explorer-tbd]', success)!;
+          if (explorerTx && data.txHash) {
+            link.href = explorerTx.replace('{hash}', data.txHash);
+            link.hidden = false;
+            tbd.hidden = true;
+          } else {
+            link.hidden = true;
+            tbd.hidden = false;
+          }
+          show('success');
+        } else if (res.status === 429) {
+          // Body field first: Retry-After is not readable cross-origin unless exposed.
+          const secs = Number(data.retryAfterSeconds ?? res.headers.get('Retry-After'));
+          q('[data-hours]')!.textContent = Number.isFinite(secs) && secs > 0 ? String(Math.ceil(secs / 3600)) : '[TBD]';
+          show('limited');
+        } else if (data.code === 'invalid_address') {
+          setInvalid(true);
+          show(null);
+        } else if (data.code === 'blocked_recipient') {
+          fail('This address cannot receive test KASH.', 'Module accounts, precompiles and the zero address are refused. Use a wallet address.');
+        } else if (data.code === 'contract_recipient') {
+          fail('This address is a contract.', 'The faucet pays plain accounts only. Use the wallet address that will deploy or call your contract.');
+        } else if (data.code === 'faucet_empty') {
+          fail('The faucet is out of test KASH.', 'It is being refilled. Try again later.');
+        } else if (data.code === 'send_failed' && data.phase === 'post-broadcast') {
+          fail(
+            'The result of the transfer is unknown.',
+            `You may still have been paid. Check the explorer for ${data.txHash ?? 'the transaction'}. The limit for this address still applies.`,
+          );
+        } else if (data.code === 'send_failed') {
+          fail('Nothing was sent.', data.error ? String(data.error) : 'The network refused the transfer. Try again.');
+        } else {
+          fail('The request did not go through.', data.error ? String(data.error) : 'Try again in a moment.');
+        }
+      } catch {
+        fail('Could not reach the faucet.', 'Check your connection and try again.');
+      } finally {
+        submit.disabled = false;
+      }
+    });
+  }
+</script>
+
+<style>
+  .faucet {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 20px;
+    border: 1px solid var(--fg);
+    border-radius: var(--radius);
+  }
+  .field { display: flex; flex-direction: column; gap: 8px; }
+  label { font-size: 15px; font-weight: 500; }
+  .input {
+    height: 52px;
+    width: 100%;
+    padding: 0 14px;
+    border: 1px solid #8C8C87;
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 16px;
+  }
+  .input.mono { font-family: var(--mono); font-size: 15px; }
+  .input:focus, .input[aria-invalid='true'] { border-color: var(--fg); outline: 2px solid var(--fg); outline-offset: 1px; }
+  .help { font-size: 13px; line-height: 20px; color: var(--muted); }
+  .err { display: flex; gap: 8px; align-items: center; font-size: 13px; line-height: 20px; color: var(--fg); }
+  .err[hidden] { display: none; }
+  .err-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--fg); }
+  .faucet .btn { width: 100%; }
+  .faucet .btn:disabled { opacity: .6; cursor: progress; }
+
+  .result { display: flex; flex-direction: column; }
+  .result:empty { display: none; }
+  .status { display: flex; gap: 16px; align-items: flex-start; padding: 24px 28px; border-radius: var(--radius); }
+  .status[hidden] { display: none; }
+  .status.soft { background: var(--alt); border: 1px solid var(--line); }
+  .status.strong { background: var(--bg); border: 1px solid var(--fg); }
+  .icon { flex-shrink: 0; }
+  .ring { width: 20px; height: 20px; margin-top: 3px; border: 1px solid var(--fg); border-radius: 50%; }
+  .check {
+    width: 20px;
+    height: 20px;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .half { width: 20px; height: 10px; margin-top: 8px; border-radius: 10px 10px 0 0; background: var(--fg); }
+  .st-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .st-body.grow { flex-grow: 1; gap: 10px; }
+  .st-title { font-size: 17px; font-weight: 500; }
+  .st-body p { font-size: 15px; line-height: 23px; color: var(--muted); text-wrap: pretty; }
+  .hash { display: flex; flex-direction: column; gap: 4px; }
+  .hash-label { font-size: 13px; color: var(--muted); }
+  .hash-value { font-size: 13px; line-height: 20px; overflow-wrap: anywhere; }
+  .link.small { font-size: 15px; gap: 6px; }
+  .link[hidden], [data-explorer-tbd][hidden] { display: none; }
+
+  .notch {
+    position: absolute;
+    top: -24px;
+    right: -24px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+  }
+
+  .facts { border-top: 1px solid var(--fg); display: flex; flex-direction: column; }
+  .facts > div { padding: 14px 0; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
+  .facts dt { font-size: 13px; color: var(--muted); }
+  .facts dd { font-size: 15px; line-height: 22px; }
+
+  @media (min-width: 900px) {
+    .faucet { padding: 36px; }
+    .faucet .btn { width: auto; align-self: flex-start; }
+    .notch { top: -32px; right: -32px; width: 64px; height: 64px; }
+  }
+</style>
