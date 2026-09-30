@@ -1,0 +1,241 @@
+---
+import Base from '../../layouts/Base.astro';
+import Arrow from '../../components/Arrow.astro';
+import SourcePanel from '../../components/SourcePanel.astro';
+import { routes, external, devnet, devnetAddChain } from '../../data/site';
+
+const counterTs = `<span class="kw">import</span> { storage, <span class="kw">view</span>, onlyOwner } <span class="kw">from</span> <span class="acc">"scriipture"</span>;
+
+<span class="kw">export</span> <span class="kw">class</span> Counter {
+  <span class="acc">@storage</span> count: <span class="kw">bigint</span> = 0n;
+
+  <span class="acc">@onlyOwner</span>
+  increment(): <span class="kw">void</span> {
+    require(<span class="kw">this</span>.count &lt; 1000000n, <span class="acc">"Max reached"</span>);
+    <span class="kw">this</span>.count = <span class="kw">this</span>.count + 1n;
+  }
+
+  <span class="acc">@view</span>
+  current(): <span class="kw">bigint</span> {
+    <span class="kw">return</span> <span class="kw">this</span>.count;
+  }
+}`;
+
+type Resource = { title: string; body: string; href: string | null; external?: boolean; code?: string; tbd?: boolean };
+const resources: Resource[] = [
+  { title: 'Quickstart', body: 'Connect a wallet, fund it and deploy your first contract on devnet-1.', href: routes.quickstart },
+  { title: 'Networks & RPC', body: 'Chain IDs and endpoints for devnet, testnet, mainnet and a local node.', href: routes.networks },
+  { title: 'Faucet', body: 'Free test KASH for devnet-1.', href: routes.faucet },
+  { title: 'Contracts', body: 'Canonical contract addresses and the compliance precompile.', href: routes.contracts },
+  { title: 'Account abstraction', body: 'ERC-4337 smart accounts, EIP-7702, passkeys through the P-256 precompile, and paymasters.', href: null },
+  { title: 'Explorer', body: 'Blocks, transactions and addresses.', href: external.explorer, external: true, tbd: !external.explorer },
+  { title: 'Docs', body: 'Reference documentation at', code: 'docs.konstellation.network', href: external.docs, external: true, tbd: !external.docs },
+  { title: 'GitHub', body: 'Source, releases and checksums at', code: 'github.com/konstellation-network', href: external.github, external: true },
+];
+---
+<Base
+  title="Developers — Konstellation"
+  description="An EVM-compatible Layer 1. Deploy with Foundry or Hardhat, connect with viem or wagmi, and test on devnet-1 with free test KASH."
+>
+  <section class="hero" aria-label="Introduction">
+    <div class="container hero-grid">
+      <div class="hero-text">
+        <div class="eyebrow">Developers</div>
+        <h1>Build on Konstellation.</h1>
+        <p class="lead hero-lead">An EVM-compatible Layer 1. Deploy with Foundry or Hardhat, connect with viem or wagmi, and test on devnet-1 with free test KASH.</p>
+        <div class="btn-row">
+          <a href={routes.quickstart} class="btn btn--primary">Quickstart</a>
+          <a href={routes.faucet} class="btn btn--outline">Get test KASH</a>
+        </div>
+      </div>
+      <div class="hero-card-wrap">
+        <section class="net-card" aria-labelledby="net-card-h">
+          <div class="eyebrow" id="net-card-h">{devnet.name}</div>
+          <dl class="facts">
+            <dt>Chain ID</dt><dd class="mono">{devnet.chainId}</dd>
+            <dt>Symbol</dt><dd class="mono">{devnet.symbol}</dd>
+            <dt>RPC</dt><dd>{devnet.rpc ? <span class="mono">{devnet.rpc}</span> : <span class="tbd">[TBD]</span>}</dd>
+            <dt>Explorer</dt><dd>{devnet.explorer ? <span class="mono">{devnet.explorer}</span> : <span class="tbd">[TBD]</span>}</dd>
+          </dl>
+          <button
+            type="button"
+            class="btn btn--primary"
+            data-add-chain={devnetAddChain}
+            disabled={!devnetAddChain}
+            title={devnetAddChain ? undefined : 'Available once the devnet RPC URL is published'}
+          >Add to wallet</button>
+          <p class="note" data-wallet-msg aria-live="polite"></p>
+          <div class="notch" aria-hidden="true"></div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--alt" aria-labelledby="res-h">
+    <div class="container res">
+      <h2 id="res-h" class="h2" data-reveal>Everything you need to ship.</h2>
+
+      <div class="featured">
+        <div class="feat-text">
+          <div class="eyebrow">Featured</div>
+          <h3 class="h2 feat-title">Scriipture</h3>
+          <p class="lead">Prefer TypeScript? Write contracts in Scriipture. It compiles to readable Solidity and runs nine security checks before anything deploys.</p>
+          <a href={routes.scriipture} class="link">Explore Scriipture<Arrow /></a>
+        </div>
+        <SourcePanel filename="Counter.ts" language="TypeScript" html={counterTs} label="A Scriipture contract written in TypeScript" />
+        <div class="notch notch--alt" aria-hidden="true"></div>
+      </div>
+
+      <ul class="cards">
+        {resources.map((r, i) => (
+          <li>
+            <a
+              href={r.href ?? '#'}
+              class="card"
+              target={r.external && r.href ? '_blank' : undefined}
+              rel={r.external && r.href ? 'noopener' : undefined}
+            >
+              <div class="card-top">
+                <span class="eyebrow">{String(i + 1).padStart(2, '0')}</span>
+                <span class="card-arrow">
+                  {r.external ? (
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 2h6v6M10 2 2 10" /></svg>
+                  ) : (
+                    <Arrow />
+                  )}
+                </span>
+              </div>
+              <h3 class="card-title">{r.title}{r.external && <span class="sr-only"> (opens in a new tab)</span>}</h3>
+              <p class="card-body">
+                {r.body}
+                {r.code && <> <span class="tbd">{r.code}</span></>}
+                {r.tbd && <> <span class="tbd">[TBD]</span></>}
+              </p>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* ----- Hero ----- */
+  .hero { padding-block: 56px; }
+  .hero-text { display: flex; flex-direction: column; gap: 24px; }
+  h1 { font-size: 42px; line-height: 1.06; letter-spacing: -0.03em; font-weight: 400; text-wrap: balance; }
+  .hero-lead { max-width: 680px; }
+  .hero-card-wrap { margin-top: 48px; }
+
+  .net-card {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    border: 1px solid var(--fg);
+    border-radius: var(--radius);
+    background: var(--bg);
+  }
+  .facts {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 24px;
+    row-gap: 10px;
+    font-size: 15px;
+    line-height: 22px;
+  }
+  .facts dt { color: var(--muted); }
+  .net-card .btn { width: 100%; }
+  .net-card .note:empty { display: none; }
+
+  .notch {
+    position: absolute;
+    top: -28px;
+    right: -28px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+  }
+  .notch--alt { background: var(--alt); }
+
+  /* ----- Resources ----- */
+  .res { display: flex; flex-direction: column; gap: 40px; }
+  .featured {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding: 24px 20px;
+    border: 1px solid var(--fg);
+    border-radius: var(--radius);
+    background: var(--bg);
+  }
+  .feat-text { display: flex; flex-direction: column; gap: 20px; }
+
+  .cards { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    padding: 20px 0 28px;
+    border-top: 1px solid var(--fg);
+    color: var(--fg);
+    text-decoration: none;
+  }
+  .card-top { display: flex; justify-content: space-between; align-items: center; }
+  .card-arrow { display: flex; color: var(--accent-text); transition: transform 150ms; }
+  .card:hover .card-arrow { transform: translateX(3px); }
+  .card:hover .card-title { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+  .card-title { font-size: 22px; line-height: 1.25; letter-spacing: -0.01em; font-weight: 500; }
+  .card-body { font-size: 16px; line-height: 25px; color: var(--muted); text-wrap: pretty; }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  /* ----- Desktop ----- */
+  @media (min-width: 900px) {
+    .hero { padding-block: 112px; }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 24px;
+    }
+    .hero-text { grid-column: 1 / span 8; gap: 28px; }
+    h1 { font-size: clamp(56px, 5.56vw, 80px); line-height: 1.02; letter-spacing: -0.035em; }
+    .hero-card-wrap {
+      grid-column: 9 / span 4;
+      margin-top: 0;
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-end;
+    }
+    .net-card { width: 100%; max-width: 360px; padding: 28px; }
+
+    .res { gap: 64px; }
+    .featured {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      column-gap: 48px;
+      align-items: center;
+      padding: 48px;
+    }
+    .feat-title { font-size: clamp(36px, 3.06vw, 44px); }
+    .notch--alt { top: -36px; right: -36px; width: 72px; height: 72px; }
+
+    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; }
+    .card { min-height: 168px; padding: 28px 24px 40px 0; }
+    .card-title { font-size: 28px; line-height: 1.2; letter-spacing: -0.015em; }
+    .card-body { font-size: 17px; line-height: 27px; }
+  }
+</style>
