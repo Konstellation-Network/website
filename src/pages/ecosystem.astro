@@ -1,0 +1,201 @@
+---
+import Base from '../layouts/Base.astro';
+import Mark from '../components/Mark.astro';
+
+// Grants pool: TOKENOMICS.md §7, "Ecosystem & developer grants", 18 % = 180 M KASH.
+// Applications open with the grants programme; set PUBLIC_GRANTS_URL at build
+// time to point the Apply buttons at the application form.
+const applyUrl = (import.meta.env.PUBLIC_GRANTS_URL as string | undefined) || null;
+
+const areas = [
+  { title: 'Tokenization infrastructure', body: 'Issuance platforms, transfer-agent tooling, and integrations with token standards such as ERC-3643.' },
+  { title: 'Payments', body: 'Stablecoin and tokenized-cash flows, merchant settlement, and machine-to-machine payments.' },
+  { title: 'Custody and wallet integrations', body: 'Institutional custody, smart-account wallets, and passkey sign-in.' },
+  { title: 'Developer tooling', body: 'SDKs, indexers, testing frameworks and explorers.' },
+];
+
+const steps = [
+  { title: 'Apply', body: 'Tell us what you are building, who is on the team, and the milestones you will deliver.' },
+  { title: 'Review', body: 'The foundation reviews each application and may ask follow-up questions. Timeline', tbd: true },
+  { title: 'Build', body: 'Grants are paid in KASH against agreed milestones. Terms', tbd: true },
+];
+
+const faq = [
+  { q: 'Who can apply?', a: 'Teams and individuals building on Konstellation. Eligibility details', tbd: true },
+  { q: 'How much can a team receive?', a: 'Grant sizes depend on scope. Ranges', tbd: true },
+  { q: 'Are grants subject to vesting or lockups?', a: '', tbd: true },
+  { q: 'Can we apply before mainnet?', a: 'Yes. Build and test on devnet-1.' },
+];
+---
+<Base
+  title="Ecosystem and grants — Konstellation"
+  description="Grants for the infrastructure regulated assets need: issuance, payments, custody and the tools developers use every day."
+>
+  <section class="hero" aria-label="Introduction">
+    <div class="container hero-grid">
+      <div class="hero-text">
+        <div class="eyebrow">Ecosystem and grants</div>
+        <h1>180M KASH for teams building on Konstellation.</h1>
+        <p class="lead hero-lead">Grants for the infrastructure regulated assets need: issuance, payments, custody and the tools developers use every day.</p>
+        <div class="btn-row">
+          {applyUrl
+            ? <a href={applyUrl} class="btn btn--primary">Apply</a>
+            : <a href="#apply" class="btn btn--primary">Apply <span class="tbd">[TBD]</span></a>}
+          <a href="#faq" class="btn btn--outline">Read the FAQ</a>
+        </div>
+      </div>
+      <div class="hero-shape"><div class="disc" aria-hidden="true"></div></div>
+    </div>
+  </section>
+
+  <section class="section section--alt" aria-labelledby="areas-h">
+    <div class="container stackc">
+      <div class="head">
+        <div class="eyebrow">What gets funded</div>
+        <h2 id="areas-h" class="h2" data-reveal>Four areas.</h2>
+      </div>
+      <ul class="areas">
+        {areas.map((a, i) => (
+          <li class="area">
+            <div class="eyebrow">{String(i + 1).padStart(2, '0')}</div>
+            <h3 class="item-title">{a.title}</h3>
+            <p class="item-body">{a.body}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="how-h">
+    <div class="container stackc">
+      <h2 id="how-h" class="h2" data-reveal>How it works.</h2>
+      <ol class="steps">
+        {steps.map((s, i) => (
+          <li class="step">
+            <span class:list={['num', { 'num--solid': i === 0 }]} aria-hidden="true">{i + 1}</span>
+            <h3 class="item-title">{s.title}</h3>
+            <p class="item-body">{s.body}{s.tbd && <> <span class="tbd">[TBD]</span></>}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section faq-sec" aria-labelledby="faq-h">
+    <div class="container split">
+      <div class="head">
+        <div class="eyebrow">FAQ</div>
+        <h2 id="faq-h" class="h2" data-reveal>Questions.</h2>
+      </div>
+      <div id="faq" class="faq">
+        {faq.map((f, i) => (
+          <details open={i === 0}>
+            <summary>{f.q}</summary>
+            <p class="item-body">{f.a}{f.tbd && <>{f.a && ' '}<span class="tbd">[TBD]</span></>}</p>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section id="apply" class="cta inverted" aria-labelledby="cta-h">
+    <div class="container cta-grid">
+      <div class="cta-text">
+        <h2 id="cta-h" class="h2" data-reveal>Apply for a grant.</h2>
+        <p class="lead cta-lead">Applications open with the grants programme.</p>
+        <div class="btn-row">
+          {applyUrl
+            ? <a href={applyUrl} class="btn btn--primary">Apply</a>
+            : <span class="btn btn--primary" aria-disabled="true">Apply <span class="tbd">[TBD]</span></span>}
+        </div>
+      </div>
+      <div class="cta-mark"><Mark size={200} class="cta-mark-svg" /></div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* ----- Hero ----- */
+  .hero { padding-block: 56px; }
+  .hero-text { display: flex; flex-direction: column; gap: 24px; }
+  h1 { font-size: 42px; line-height: 1.06; letter-spacing: -0.03em; font-weight: 400; text-wrap: balance; }
+  .hero-lead { max-width: 680px; }
+  .hero-shape { margin-top: 48px; }
+  .disc { width: 200px; height: 200px; border-radius: 50%; background: var(--accent); }
+
+  /* ----- Sections ----- */
+  .stackc { display: flex; flex-direction: column; gap: 40px; }
+  .head { display: flex; flex-direction: column; gap: 20px; }
+  .item-title { font-size: 22px; line-height: 1.25; letter-spacing: -0.01em; font-weight: 500; text-wrap: balance; }
+  .item-body { font-size: 16px; line-height: 25px; color: var(--muted); text-wrap: pretty; max-width: 520px; }
+
+  .areas { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .area { display: flex; flex-direction: column; gap: 10px; padding: 20px 0 28px; border-top: 1px solid var(--fg); }
+
+  .steps { display: flex; flex-direction: column; gap: 32px; }
+  .step { display: flex; flex-direction: column; gap: 16px; padding-top: 24px; border-top: 1px solid var(--fg); }
+  .num {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--fg);
+    border-radius: 50%;
+    font-family: var(--mono);
+    font-size: 14px;
+  }
+  .num--solid { background: var(--fg); color: var(--bg); }
+
+  .faq-sec { border-top: 1px solid var(--line); }
+  .split { display: flex; flex-direction: column; gap: 40px; }
+  .faq { border-bottom: 1px solid var(--line); scroll-margin-top: 24px; }
+  details { border-top: 1px solid var(--fg); padding: 20px 0; }
+  summary {
+    cursor: pointer;
+    font-size: 19px;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    list-style-position: outside;
+  }
+  details .item-body { padding-top: 12px; }
+
+  /* ----- CTA ----- */
+  .cta { padding-block: 80px; }
+  .cta-text { display: flex; flex-direction: column; gap: 32px; }
+  .cta-lead { color: color-mix(in srgb, var(--bg) 62%, var(--fg)); max-width: 560px; }
+  .cta .btn { width: 100%; }
+  .cta-mark { display: flex; justify-content: flex-end; margin-top: 48px; }
+  .cta-mark :global(.cta-mark-svg) { width: 112px; height: 112px; }
+
+  /* ----- Desktop ----- */
+  @media (min-width: 900px) {
+    .hero { padding-block: 112px; }
+    .hero-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+    .hero-text { grid-column: 1 / span 8; gap: 28px; }
+    h1 { font-size: clamp(56px, 5.56vw, 80px); line-height: 1.02; letter-spacing: -0.035em; }
+    .hero-shape { grid-column: 9 / span 4; margin-top: 0; display: flex; justify-content: flex-end; align-items: flex-end; }
+    .disc { width: 100%; max-width: 360px; height: auto; aspect-ratio: 1; }
+
+    .stackc { gap: 64px; }
+    .item-title { font-size: 28px; line-height: 1.2; letter-spacing: -0.015em; }
+    .item-body { font-size: 17px; line-height: 27px; }
+
+    .areas { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; }
+    .area { gap: 14px; padding: 28px 0 48px; }
+
+    .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 24px; }
+
+    .split { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+    .split .head { grid-column: 1 / span 5; }
+    .faq { grid-column: 7 / span 6; }
+    summary { font-size: 22px; }
+
+    .cta { padding-block: 136px; }
+    .cta-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+    .cta-text { grid-column: 1 / span 8; gap: 36px; }
+    .cta .btn { width: auto; }
+    .cta-mark { grid-column: 10 / span 3; margin-top: 0; align-items: center; }
+    .cta-mark :global(.cta-mark-svg) { width: 100%; max-width: 200px; height: auto; aspect-ratio: 1; }
+  }
+</style>
