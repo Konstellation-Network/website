@@ -18,12 +18,12 @@ const maxPct = Math.max(...allocation.map((a) => a.pct));
 // ENGINEERING.md D7: 4 foundation-run validators at launch, in four separate failure domains.
 const validators = ['A', 'B', 'C', 'D'];
 
-// ENGINEERING.md §15 launch sequence and D8 (re-decided 2026-09-15: no bridge
-// on day one; a soak period before limits lift). Matches the Security page.
+// ENGINEERING.md §15 phase 9 and D8 (founder, 2026-09-30: value ceiling at
+// launch; a bridge most likely on day one). Matches the Security page.
 const roadmap = [
   { title: 'Devnet', body: 'devnet-1 for application development.', when: 'Opening' },
   { title: 'Testnet', body: 'testnet-1 for operator rehearsal and upgrade drills.' },
-  { title: 'Mainnet', body: 'konstellation-1, with a soak period first and no bridge on day one.' },
+  { title: 'Mainnet', body: 'konstellation-1, launching with a value ceiling.' },
   { title: 'Cross-chain connectivity', body: 'IBC channels opened one at a time by governance.' },
 ];
 ---

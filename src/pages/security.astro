@@ -19,7 +19,7 @@ const controls = [
   },
   {
     title: 'Bridge caps in contracts',
-    body: 'When a bridge opens, its caps are enforced in contract code, not by off-chain policy. There is no bridge at launch.',
+    body: 'The bridge runs under hard daily and total caps enforced in its contract code, not by off-chain policy.',
   },
   {
     title: 'Rehearsed halt drill',
@@ -92,13 +92,13 @@ gh attestation verify konstellationd-<span class="str">[TBD]</span>-linux-amd64 
       <div class="col-b6 stages">
         <div class="stage">
           <div class="glyph"><span class="half" aria-hidden="true"></span></div>
-          <h3 class="h3">A soak period first</h3>
-          <p class="body">Mainnet runs for at least a month before limits are lifted, and they are lifted only after the audit and a clean run.</p>
+          <h3 class="h3">A value ceiling first</h3>
+          <p class="body">Mainnet opens with a ceiling on the value it carries <span class="tbd">[TBD]</span> and runs for at least a month. The ceiling is lifted only after the audit and a clean run.</p>
         </div>
         <div class="stage">
           <div class="glyph"><span class="ring" aria-hidden="true"></span></div>
-          <h3 class="h3">No bridge on day one</h3>
-          <p class="body">Cross-chain connectivity opens later. By policy, no IBC channel carries value until governance has set a rate limit for it.</p>
+          <h3 class="h3">Capped cross-chain flows</h3>
+          <p class="body">The bridge operates within the ceiling, under caps in its contract. By policy, no IBC channel carries value until governance has set a rate limit for it.</p>
         </div>
       </div>
     </div>
