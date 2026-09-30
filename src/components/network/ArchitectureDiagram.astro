@@ -1,0 +1,57 @@
+---
+// The three upstream layers with IBC alongside. Desktop: stack on the left,
+// dashed connector, IBC as a tall dashed box on the right. Mobile: IBC below
+// the stack with a vertical dashed connector.
+const layers = [
+  { name: 'EVM', desc: 'Solidity contracts, JSON-RPC, precompiles' },
+  { name: 'Cosmos SDK', desc: 'Accounts, staking, governance, fees' },
+  { name: 'CometBFT', desc: 'Consensus and networking. Deterministic finality.', solid: true },
+];
+---
+<figure class="arch" aria-label="Architecture: the EVM runs on the Cosmos SDK, which runs on CometBFT. IBC sits alongside for cross-chain connectivity.">
+  <ol class="stack">
+    {layers.map((l) => (
+      <li class:list={['box', { solid: l.solid }]}>
+        <span class="name">{l.name}</span>
+        <span class="desc">{l.desc}</span>
+      </li>
+    ))}
+  </ol>
+  <div class="link" aria-hidden="true"></div>
+  <div class="box ibc">
+    <span class="name">IBC</span>
+    <span class="desc">Cross-chain connectivity, opened channel by channel by governance.</span>
+  </div>
+</figure>
+
+<style>
+  .arch { display: flex; flex-direction: column; margin: 0; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  .box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 88px;
+    padding: 12px 16px;
+    background: var(--bg);
+    border: 1px solid var(--fg);
+    border-radius: var(--radius);
+    font-size: 14px;
+    line-height: 21px;
+  }
+  .box.solid { background: var(--fg); color: var(--bg); }
+  .name { font-size: 18px; font-weight: 500; }
+  .desc { color: var(--muted); }
+  .solid .desc { color: color-mix(in srgb, var(--bg) 62%, var(--fg)); }
+  .ibc { border-style: dashed; }
+  .link { align-self: center; width: 0; height: 40px; border-left: 1px dashed var(--fg); }
+
+  @media (min-width: 900px) {
+    .arch { flex-direction: row; align-items: stretch; }
+    .stack { flex: 496 1 0; gap: 16px; min-width: 0; }
+    .box { min-height: 96px; padding: 16px 24px; font-size: 15px; }
+    .name { font-size: 20px; }
+    .link { flex: 80 0 0; align-self: center; height: 0; width: auto; border-left: 0; border-top: 1px dashed var(--fg); }
+    .ibc { flex: 160 1 0; justify-content: flex-start; padding: 16px 20px; min-width: 0; }
+  }
+</style>

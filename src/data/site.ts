@@ -199,10 +199,10 @@ export const footerColumns: { heading: string; links: { label: string; href: str
   {
     heading: 'Network',
     links: [
-      { label: 'Architecture', href: routes.network },
-      { label: 'Validators', href: routes.network },
-      { label: 'KASH', href: routes.network },
-      { label: 'Roadmap', href: routes.network },
+      { label: 'Architecture', href: `${routes.network}#architecture` },
+      { label: 'Validators', href: `${routes.network}#validators` },
+      { label: 'KASH', href: `${routes.network}#kash` },
+      { label: 'Roadmap', href: `${routes.network}#roadmap` },
       { label: 'Ecosystem and grants', href: routes.ecosystem },
     ],
   },

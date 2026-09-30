@@ -1,0 +1,289 @@
+---
+import Base from '../layouts/Base.astro';
+import Arrow from '../components/Arrow.astro';
+import Mark from '../components/Mark.astro';
+import ArchitectureDiagram from '../components/network/ArchitectureDiagram.astro';
+import { networks, routes } from '../data/site';
+
+// Genesis allocation, TOKENOMICS.md §7 (decided 2026-09-15). Bars are relative to the largest bucket.
+const allocation = [
+  { label: 'Community & developers', pct: 33 },
+  { label: 'Treasury', pct: 25 },
+  { label: 'Team', pct: 22 },
+  { label: 'Validators', pct: 12 },
+  { label: 'Liquidity', pct: 8 },
+];
+const maxPct = Math.max(...allocation.map((a) => a.pct));
+
+// ENGINEERING.md D7: 4 foundation-run validators at launch, in four separate failure domains.
+const validators = ['A', 'B', 'C', 'D'];
+
+// ENGINEERING.md §15 launch sequence and D8 (re-decided 2026-09-15: no bridge
+// on day one; a soak period before limits lift). Matches the Security page.
+const roadmap = [
+  { title: 'Devnet', body: 'devnet-1 for application development.', when: 'Opening' },
+  { title: 'Testnet', body: 'testnet-1 for operator rehearsal and upgrade drills.' },
+  { title: 'Mainnet', body: 'konstellation-1, with a soak period first and no bridge on day one.' },
+  { title: 'Cross-chain connectivity', body: 'IBC channels opened one at a time by governance.' },
+];
+---
+<Base
+  title="Network — Konstellation"
+  description="How Konstellation is built, who runs it, and how it opens to wider participation."
+>
+  <section class="hero" aria-label="Introduction">
+    <div class="container">
+      <div class="hero-text">
+        <div class="eyebrow">Network</div>
+        <h1>A Layer 1 with accountable operators.</h1>
+        <p class="lead hero-lead">How Konstellation is built, who runs it, and how it opens to wider participation.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="architecture" class="section section--alt" aria-labelledby="arch-h">
+    <div class="container split">
+      <div class="intro">
+        <div class="eyebrow">Architecture</div>
+        <h2 id="arch-h" class="h2" data-reveal>Three layers, all upstream.</h2>
+        <p class="lead">CometBFT provides consensus, the Cosmos SDK provides the application framework, and the EVM runs contracts. Cross-chain connectivity through IBC sits alongside, opened channel by channel by governance.</p>
+      </div>
+      <div class="aside">
+        <ArchitectureDiagram />
+      </div>
+    </div>
+  </section>
+
+  <section id="networks" class="section" aria-labelledby="nets-h">
+    <div class="container nets">
+      <h2 id="nets-h" class="h2" data-reveal>Networks.</h2>
+      <table class="net-table">
+        <thead>
+          <tr><th scope="col" class="c-net">Network</th><th scope="col" class="c-id">Chain ID</th><th scope="col">Purpose</th></tr>
+        </thead>
+        <tbody>
+          {networks.map((n) => (
+            <tr>
+              <th scope="row">{n.label} <span class="tbd net-id">({n.name})</span></th>
+              <td data-label="Chain ID"><span class="mono">{n.chainId}</span></td>
+              <td data-label="Purpose"><span>{n.blurb}{n.opens && <> <span class="tbd">{n.opens}</span>.</>}</span></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <a href={routes.networks} class="link">Endpoints and RPC<Arrow /></a>
+    </div>
+  </section>
+
+  <section id="validators" class="section validators" aria-labelledby="val-h">
+    <div class="container split">
+      <div class="intro">
+        <div class="eyebrow">Validators</div>
+        <h2 id="val-h" class="h2" data-reveal>Known operators, accountable from launch.</h2>
+        <p class="lead">Four validators at launch, operated by the foundation in separate failure domains. Further operators are admitted through a governed procedure, moving to open participation in stages.</p>
+        <a href="#" class="link"><span>Express interest in operating a validator <span class="tbd">[TBD]</span></span><Arrow /></a>
+      </div>
+      <figure class="aside val-fig" aria-label="Four launch validators in failure domains A to D; further operators admitted through a governed procedure; open participation reached in stages.">
+        <ul class="val-grid">
+          {validators.map((d, i) => (
+            <li class="val">
+              <span class="disc" aria-hidden="true"></span>
+              <span class="val-text">Validator {i + 1}<br /><span class="muted">Failure domain {d}</span></span>
+            </li>
+          ))}
+        </ul>
+        <ul class="val-next">
+          <li class="val">
+            <span class="disc disc--open" aria-hidden="true"></span>
+            <span class="val-text">Further operators<br /><span class="muted">Admitted through a governed procedure.</span></span>
+          </li>
+          <li class="val">
+            <span class="disc disc--open" aria-hidden="true"></span>
+            <span class="val-text">Open participation<br /><span class="muted">Reached in stages.</span></span>
+          </li>
+        </ul>
+      </figure>
+    </div>
+  </section>
+
+  <section id="kash" class="section section--alt" aria-labelledby="kash-h">
+    <div class="container split">
+      <div class="intro">
+        <div class="eyebrow">KASH</div>
+        <h2 id="kash-h" class="h2" data-reveal>The network’s native asset.</h2>
+        <p class="lead">KASH pays for fees and secures the network through staking. The base fee of every transaction is burned.</p>
+        <a href="#" class="link"><span>Read the whitepaper <span class="tbd">[TBD]</span></span><Arrow /></a>
+      </div>
+      <figure class="aside alloc">
+        <figcaption>Genesis allocation</figcaption>
+        <dl class="alloc-list">
+          {allocation.map((a) => (
+            <div class="alloc-row">
+              <dt>{a.label}</dt>
+              <dd class="bar" aria-hidden="true"><span style={`width: ${((a.pct / maxPct) * 100).toFixed(1)}%`}></span></dd>
+              <dd class="mono pct">{a.pct}%</dd>
+            </div>
+          ))}
+        </dl>
+      </figure>
+    </div>
+  </section>
+
+  <section id="roadmap" class="section" aria-labelledby="road-h">
+    <div class="container road">
+      <div class="road-head">
+        <div class="eyebrow">Roadmap</div>
+        <h2 id="road-h" class="h2" data-reveal>Devnet, testnet, mainnet, then cross-chain.</h2>
+      </div>
+      <ol class="timeline">
+        {roadmap.map((r, i) => (
+          <li class:list={['step', { current: i === 0 }]}>
+            <span class="dot" aria-hidden="true"></span>
+            <div class="step-text">
+              <span class="step-title">{r.title}</span>
+              <span class="step-body">{r.body}</span>
+              <span class="step-when">{r.when && `${r.when} `}<span class="tbd">[TBD]</span></span>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="cta inverted" aria-labelledby="cta-h">
+    <div class="container cta-grid">
+      <div class="cta-text">
+        <h2 id="cta-h" class="h2" data-reveal>Operate a validator on Konstellation.</h2>
+        <p class="lead cta-lead">Further operators are admitted through a governed procedure. Tell us about your infrastructure.</p>
+        <div class="btn-row">
+          <a href="#" class="btn btn--primary">Express interest <span class="tbd">[TBD]</span></a>
+        </div>
+      </div>
+      <div class="cta-mark"><Mark size={200} class="cta-mark-svg" /></div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* ----- Hero ----- */
+  .hero { padding-block: 56px; }
+  .hero-text { display: flex; flex-direction: column; gap: 24px; }
+  h1 { font-size: 42px; line-height: 1.06; letter-spacing: -0.03em; font-weight: 400; text-wrap: balance; }
+  .hero-lead { max-width: 680px; }
+
+  /* ----- Shared split ----- */
+  .split { display: flex; flex-direction: column; gap: 40px; }
+  .intro { display: flex; flex-direction: column; gap: 24px; }
+  .muted { color: var(--muted); }
+
+  /* ----- Networks ----- */
+  .nets { display: flex; flex-direction: column; gap: 40px; }
+  .net-table { width: 100%; border-collapse: collapse; }
+  .net-table thead { display: none; }
+  .net-table tr { display: grid; grid-template-columns: 88px minmax(0, 1fr); column-gap: 12px; row-gap: 8px; padding: 16px 0 20px; border-top: 1px solid var(--fg); }
+  .net-table tbody th { grid-column: 1 / -1; text-align: left; font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+  .net-table td { display: contents; font-size: 15px; line-height: 22px; }
+  .net-table td::before { content: attr(data-label); color: var(--muted); font-family: var(--sans); }
+  .net-id { color: var(--muted); font-weight: 400; }
+
+  /* ----- Validators ----- */
+  .validators { border-top: 1px solid var(--line); }
+  .val-fig { display: flex; flex-direction: column; gap: 32px; margin: 0; }
+  .val-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; row-gap: 28px; }
+  .val-next { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; border-top: 1px solid var(--line); padding-top: 32px; }
+  .val { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+  .disc { width: 64px; height: 64px; border-radius: 50%; background: var(--fg); }
+  .disc--open { background: transparent; border: 1px dashed var(--fg); }
+  .val-text { font-size: 14px; line-height: 20px; }
+
+  /* ----- KASH ----- */
+  .alloc { display: flex; flex-direction: column; gap: 16px; margin: 0; }
+  .alloc figcaption { font-size: 15px; font-weight: 500; }
+  .alloc-list { border-bottom: 1px solid var(--line); }
+  .alloc-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 48px;
+    grid-template-areas: 'label pct' 'bar bar';
+    column-gap: 16px;
+    row-gap: 8px;
+    align-items: center;
+    padding: 14px 0;
+    border-top: 1px solid var(--line);
+  }
+  .alloc-row dt { grid-area: label; font-size: 15px; line-height: 22px; }
+  .bar { grid-area: bar; height: 12px; }
+  .bar span { display: block; height: 100%; background: var(--fg); }
+  .pct { grid-area: pct; font-size: 14px; text-align: right; }
+
+  /* ----- Roadmap ----- */
+  .road { display: flex; flex-direction: column; gap: 48px; }
+  .road-head { display: flex; flex-direction: column; gap: 20px; }
+  .timeline { position: relative; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 10px;
+    bottom: 40px;
+    width: 1px;
+    background: var(--fg);
+  }
+  .step { position: relative; display: grid; grid-template-columns: 24px minmax(0, 1fr); column-gap: 16px; padding-bottom: 28px; }
+  .dot { position: relative; z-index: 1; width: 16px; height: 16px; margin-top: 4px; border-radius: 50%; background: var(--bg); border: 1px solid var(--fg); }
+  .current .dot { background: var(--fg); }
+  .step-text { display: flex; flex-direction: column; gap: 4px; }
+  .step-title { font-size: 18px; font-weight: 500; }
+  .step-body { font-size: 15px; line-height: 22px; color: var(--muted); }
+  .step-when { font-size: 14px; }
+
+  /* ----- CTA ----- */
+  .cta { padding-block: 80px; }
+  .cta-text { display: flex; flex-direction: column; gap: 32px; }
+  .cta-lead { color: color-mix(in srgb, var(--bg) 62%, var(--fg)); max-width: 560px; }
+  .cta .btn { width: 100%; }
+  .cta-mark { display: flex; justify-content: flex-end; margin-top: 48px; }
+  .cta-mark :global(.cta-mark-svg) { width: 112px; height: 112px; }
+
+  /* ----- Desktop ----- */
+  @media (min-width: 900px) {
+    .hero { padding-block: 112px; }
+    .hero-text { max-width: 75%; gap: 28px; }
+    h1 { font-size: clamp(56px, 5.56vw, 80px); line-height: 1.02; letter-spacing: -0.035em; }
+
+    .split { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+    .intro { grid-column: 1 / span 5; }
+    .aside { grid-column: 7 / span 6; min-width: 0; }
+
+    .net-table thead { display: table-header-group; }
+    .net-table tr { display: table-row; padding: 0; border: 0; }
+    .net-table th, .net-table td { display: table-cell; font-size: 18px; line-height: 27px; text-align: left; vertical-align: top; padding: 22px 24px 22px 0; border-bottom: 1px solid var(--line); }
+    .net-table td::before { content: none; }
+    .net-table tbody th { font-weight: 500; margin: 0; }
+    .net-table thead th { font-size: 14px; font-weight: 400; color: var(--muted); padding: 0 24px 14px 0; border-bottom: 1px solid var(--fg); }
+    .c-net { width: 34%; }
+    .c-id { width: 16%; }
+
+    .val-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .disc { width: clamp(64px, 6.67vw, 96px); height: clamp(64px, 6.67vw, 96px); }
+
+    .alloc-row { grid-template-columns: minmax(140px, 220px) minmax(0, 1fr) 56px; grid-template-areas: 'label bar pct'; }
+    .bar { height: 20px; }
+
+    .road { gap: 72px; }
+    .timeline { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 40px; }
+    .timeline::before { left: 8px; right: 25%; top: 8px; bottom: auto; width: auto; height: 1px; }
+    .step { display: flex; flex-direction: column; gap: 24px; padding-bottom: 0; }
+    .dot { margin-top: 0; }
+    .step-text { gap: 8px; }
+    .step-title { font-size: 22px; letter-spacing: -0.01em; }
+    .step-body { font-size: 16px; line-height: 24px; }
+    .step-when { font-size: 15px; }
+
+    .cta { padding-block: 136px; }
+    .cta-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+    .cta-text { grid-column: 1 / span 8; gap: 36px; }
+    .cta .btn { width: auto; }
+    .cta-mark { grid-column: 10 / span 3; margin-top: 0; align-items: center; }
+    .cta-mark :global(.cta-mark-svg) { width: 100%; max-width: 200px; height: auto; aspect-ratio: 1; }
+  }
+</style>
